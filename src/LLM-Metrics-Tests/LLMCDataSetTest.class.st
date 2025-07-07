@@ -86,17 +86,6 @@ LLMCDataSetTest >> testPrecision [
 	llmCDataSet candidateSets add: llmCandidateSet.
 
 	self assert: (llmCDataSet precision: 1) equals: 2 / 7.
-
-
-	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'the the the the the the the'.
-	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add: 'the cat is on the mat'.
-	llmCandidateSet references add: 'there is a cat on the mat'.
-
-	llmCDataSet candidateSets: OrderedCollection new.
-	llmCDataSet candidateSets add: llmCandidateSet.
-
 	self assert: (llmCDataSet precision: 2) equals: 0.
 
 
