@@ -8,7 +8,7 @@ Class {
 	#package : 'LLM-Metrics'
 }
 
-{ #category : 'as yet unclassified' }
+{ #category : 'calculating' }
 LLMCDataSet >> brevityPenalty [
 
 	| reference_length translation_length ratio |
@@ -29,7 +29,7 @@ LLMCDataSet >> brevityPenalty [
 		ifFalse: [ ^ (1 - (1 / ratio)) exp ]
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'calculating' }
 LLMCDataSet >> calculateBlueScore: maxOrder [
 
 	| sum |
@@ -57,7 +57,7 @@ LLMCDataSet >> candidateSets: anObject [
 	candidateSets := anObject
 ]
 
-{ #category : 'initialize-release' }
+{ #category : 'calculating' }
 LLMCDataSet >> precision: n [
 
 	^(candidateSets sum: [ :cs | cs countClip: n ]) / (candidateSets sum: [ :cs | cs count: n ])
