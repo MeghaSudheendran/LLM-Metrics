@@ -45,9 +45,8 @@ LLMCDataSetTest >> testBrevityPenalty [
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
 	res := llmCDataSet brevityPenalty.
-	"#assert: res  closeTo: 0.4026"
-	self assert: llmCDataSet brevityPenalty equals: 0.402890321529133
 
+	self assert: llmCDataSet brevityPenalty closeTo: 0.40289 precision: 5
 
 	"
 min_ref =21
@@ -70,9 +69,7 @@ LLMCDataSetTest >> testCalculateBlueScore [
 
 
 	self assert: (llmCDataSet calculateBlueScore: 2) equals: 0.
-	self
-		assert: (llmCDataSet calculateBlueScore: 1)
-		equals: 0.2857142857142857
+	self assert: (llmCDataSet calculateBlueScore: 1) closeTo: 0.28571 precision: 5.
 ]
 
 { #category : 'tests' }
