@@ -33,3 +33,31 @@ LLMCandiateSetTest >> testCountClip [
 
 	self assert: (llmcandidateSet countClip: 1) equals: 5
 ]
+
+{ #category : 'tests' }
+LLMCandiateSetTest >> testGetWeightOfNgram [
+
+	self
+		assert: (LLMCandiateSet new getWeightOfNgram:
+				 (AINgram withElements: #( 'cat' ) asOrderedCollection))
+		equals: 1.
+	self
+		assert: (LLMCandiateSet new getWeightOfNgram:
+				 (AINgram withElements: #( 'def cat' ) asOrderedCollection))
+		equals: 5
+]
+
+{ #category : 'tests' }
+LLMCandiateSetTest >> testGetWeightedNgramsOrder [
+
+	| reference result ngrams |
+	reference := 'def cat dog'.
+
+
+	result := LLMCandiateSet new getWeightedNgrams: reference order: 2.
+	ngrams := LLMCandiateSet new getNgrams: reference order: 2.
+
+	self assert: (result at: ngrams first) equals: 5.
+	self assert: (result at: (ngrams at: 2)) equals: 1.
+	self assert: result size equals: 2
+]
