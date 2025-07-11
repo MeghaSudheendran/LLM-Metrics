@@ -73,6 +73,38 @@ LLMCDataSetTest >> testCalculateBlueScore [
 ]
 
 { #category : 'tests' }
+LLMCDataSetTest >> testCalculateWeightedNgramMatch [
+
+	| llmCandidateSet |
+	llmCandidateSet := LLMCandiateSet new.
+	llmCandidateSet candidate: 'def sum ( ):'.
+	llmCandidateSet references: OrderedCollection new.
+	llmCandidateSet references add: 'def product ( ):'.
+	llmCandidateSet references add: 'def add ( ):'.
+
+	llmCDataSet candidateSets: OrderedCollection new.
+	llmCDataSet candidateSets add: llmCandidateSet.
+
+	"self assert: (llmCDataSet calculateWeightedNgramMatch: 1) equals: ?"
+]
+
+{ #category : 'tests' }
+LLMCDataSetTest >> testModifiedRecall [
+
+	| llmCandidateSet |
+	llmCandidateSet := LLMCandiateSet new.
+	llmCandidateSet candidate: 'def sum ( ):'.
+	llmCandidateSet references: OrderedCollection new.
+	llmCandidateSet references add: 'def product ( ):'.
+	llmCandidateSet references add: 'def add ( ):'.
+
+	llmCDataSet candidateSets: OrderedCollection new.
+	llmCDataSet candidateSets add: llmCandidateSet.
+
+	self assert: (llmCDataSet modifiedRecall: 1) equals: 7 / 8
+]
+
+{ #category : 'tests' }
 LLMCDataSetTest >> testPrecision [
 
 	| llmCandidateSet |

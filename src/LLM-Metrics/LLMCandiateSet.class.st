@@ -21,6 +21,33 @@ LLMCandiateSet >> candidate: anObject [
 	candidate := anObject
 ]
 
+{ #category : 'operations' }
+LLMCandiateSet >> clippedSum: n [
+
+	| referenceNgramsCount candidateNgrams grams bags candidateNgramsCount maxCountReference clippedCount minCountRefCand weight |
+	clippedCount := 0.
+	referenceNgramsCount := OrderedCollection new.
+	referenceNgramsCount addAll: (references collect: [ :reference |
+				 grams := self getNgrams: reference order: n.
+				 bags := Bag withAll: grams.
+				 bags ]).
+
+	candidateNgrams := self getNgrams: candidate order: n.
+	candidateNgramsCount := Bag withAll: candidateNgrams.
+
+	candidateNgrams asSet do: [ :cand |
+			maxCountReference := 0.
+			minCountRefCand := candidateNgramsCount occurrencesOf: cand.
+			referenceNgramsCount do: [ :ref |
+				maxCountReference := maxCountReference max:
+					                     (ref occurrencesOf: cand) ].
+			minCountRefCand := maxCountReference min: minCountRefCand.
+			weight := self getWeightOfNgram: cand.
+			clippedCount := clippedCount + (minCountRefCand * weight) ].
+
+	^ clippedCount
+]
+
 { #category : 'accessing' }
 LLMCandiateSet >> count: n [
 
@@ -120,4 +147,17 @@ LLMCandiateSet >> references [
 LLMCandiateSet >> references: aCollection [
 
 	references := aCollection
+]
+
+{ #category : 'accessing' }
+LLMCandiateSet >> weightedCount: n [
+
+	| candidateNgrams candidateNgramsCount sum |
+	candidateNgrams := self getNgrams: candidate order: n.
+	candidateNgramsCount := Bag withAll: candidateNgrams.
+	sum := 0.
+	candidateNgrams asSet do: [ :cand |
+			sum := sum + ((candidateNgramsCount occurrencesOf: cand)
+			        * (self getWeightOfNgram: cand)) ].
+	^ sum
 ]

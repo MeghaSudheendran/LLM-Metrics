@@ -45,6 +45,18 @@ LLMCDataSet >> calculateBlueScore: maxOrder [
 "precision=2/7 for unigram."
 ]
 
+{ #category : 'calculating' }
+LLMCDataSet >> calculateWeightedNgramMatch: maxOrder [
+
+	| sum |
+	sum := 0.
+	1 to: maxOrder do: [ :order |
+		sum := sum + (1.0 / maxOrder * (self modifiedRecall: order) ln) ].
+
+
+	^ self brevityPenalty * sum exp
+]
+
 { #category : 'accessing' }
 LLMCDataSet >> candidateSets [
 
@@ -55,6 +67,18 @@ LLMCDataSet >> candidateSets [
 LLMCDataSet >> candidateSets: anObject [
 
 	candidateSets := anObject
+]
+
+{ #category : 'calculating' }
+LLMCDataSet >> modifiedRecall: n [
+
+	| clipped weightedTotal |
+	clipped := candidateSets sum: [ :cs |
+		           cs clippedSum: n ].
+	weightedTotal := candidateSets sum: [ :cs | cs weightedCount: n ].
+	^ weightedTotal = 0
+		  ifTrue: [ 0 ]
+		  ifFalse: [ clipped / weightedTotal ]
 ]
 
 { #category : 'calculating' }
