@@ -25,11 +25,11 @@ LLMCandiateSetTest >> setUp [
 LLMCandiateSetTest >> testClippedSum [
 
 	llmcandidateSet references: OrderedCollection new.
-	llmcandidateSet references add: 'def sum ( ) :'.
+	llmcandidateSet references add:
+		(llmcandidateSet preprocessData: 'def sum ( ) :').
 	llmcandidateSet candidate: 'def product ( ) :'.
 
-	"Unigrams in candidate: def, product, (, ), :"
-	"Reference unigrams: def, sum, (, ), :"
+
 	"
     Clipped matches:
     - 'def': 1x in candidate, 1x in reference, weight 5 (if keyword)
@@ -41,10 +41,7 @@ LLMCandiateSetTest >> testClippedSum [
 	"Total: 5 (def) + 1 ( ( ) ) + 1 ( ) ) + 1 ( : ) = 8"
 
 	self assert: (llmcandidateSet clippedSum: 1) equals: 8.
-
-
-	"Bigrams in candidate: 'def product', 'product (', '( )', ') :'
-    Reference bigrams: 'def sum', 'sum (', '( )', ') :'
+	"
     Clipped matches:
       - '( )' in both, weight 1
       - ') :' in both, weight 1
@@ -57,9 +54,12 @@ LLMCandiateSetTest >> testClippedSum [
 LLMCandiateSetTest >> testCountClip [
 
 	llmcandidateSet references: OrderedCollection new.
-	llmcandidateSet references add: 'cat running on cat'.
-	llmcandidateSet references add: 'cat kills rat'.
-	llmcandidateSet references add: 'cat chasing on mat'.
+	llmcandidateSet references add:
+		(llmcandidateSet preprocessData: 'cat running on cat').
+	llmcandidateSet references add:
+		(llmcandidateSet preprocessData: 'cat kills rat').
+	llmcandidateSet references add:
+		(llmcandidateSet preprocessData: 'cat chasing on mat').
 
 	llmcandidateSet candidate: 'cat chasing on mat cat'.
 
@@ -92,6 +92,14 @@ LLMCandiateSetTest >> testGetWeightedNgramsOrder [
 	self assert: (result at: ngrams first) equals: 5.
 	self assert: (result at: (ngrams at: 2)) equals: 1.
 	self assert: result size equals: 2
+]
+
+{ #category : 'tests' }
+LLMCandiateSetTest >> testPreprocessData [
+
+	| aString |
+	aString := 'def sum(int a, int b):'.
+	self assert: (llmcandidateSet preprocessData: aString) equals: #('def' 'sum(int' 'a,' 'int' 'b):')
 ]
 
 { #category : 'tests' }

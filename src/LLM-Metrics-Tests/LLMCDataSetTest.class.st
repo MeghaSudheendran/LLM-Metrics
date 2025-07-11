@@ -27,8 +27,10 @@ LLMCDataSetTest >> testBrevityPenalty [
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate: 'the the the the the the the'.
 	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add: 'the cat is on the mat'.
-	llmCandidateSet references add: 'there is a cat on the mat'.
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'the cat is on the mat').
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'there is a cat on the mat').
 
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
@@ -39,8 +41,10 @@ LLMCDataSetTest >> testBrevityPenalty [
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate: 'the the the'.
 	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add: 'the cat is on the mat'.
-	llmCandidateSet references add: 'there is a cat on the mat'.
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'the cat is on the mat').
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'there is a cat on the mat').
 
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
@@ -61,15 +65,20 @@ LLMCDataSetTest >> testCalculateBlueScore [
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate: 'the the the the the the the'.
 	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add: 'the cat is on the mat'.
-	llmCandidateSet references add: 'there is a cat on the mat'.
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'the cat is on the mat').
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'there is a cat on the mat').
 
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
 
 
 	self assert: (llmCDataSet calculateBlueScore: 2) equals: 0.
-	self assert: (llmCDataSet calculateBlueScore: 1) closeTo: 0.28571 precision: 5.
+	self
+		assert: (llmCDataSet calculateBlueScore: 1)
+		closeTo: 0.28571
+		precision: 5
 ]
 
 { #category : 'tests' }
@@ -79,11 +88,13 @@ LLMCDataSetTest >> testCalculateWeightedNgramMatch [
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate: 'def sum ( ):'.
 	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add: 'def product ( ):'.
-	llmCandidateSet references add: 'def add ( ):'.
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'def product ( ):').
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'def add ( ):').
 
 	llmCDataSet candidateSets: OrderedCollection new.
-	llmCDataSet candidateSets add: llmCandidateSet.
+	llmCDataSet candidateSets add: llmCandidateSet
 
 	"self assert: (llmCDataSet calculateWeightedNgramMatch: 1) equals: ?"
 ]
@@ -95,8 +106,10 @@ LLMCDataSetTest >> testModifiedRecall [
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate: 'def sum ( ):'.
 	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add: 'def product ( ):'.
-	llmCandidateSet references add: 'def add ( ):'.
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'def product ( ):').
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'def add ( ):').
 
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
@@ -111,8 +124,10 @@ LLMCDataSetTest >> testPrecision [
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate: 'the the the the the the the'.
 	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add: 'the cat is on the mat'.
-	llmCandidateSet references add: 'there is a cat on the mat'.
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'the cat is on the mat').
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'there is a cat on the mat').
 
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
@@ -124,8 +139,10 @@ LLMCDataSetTest >> testPrecision [
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate: 'the the cat'.
 	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add: 'the cat is on the mat'.
-	llmCandidateSet references add: 'there is a cat on the mat'.
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'the cat is on the mat').
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'there is a cat on the mat').
 
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
