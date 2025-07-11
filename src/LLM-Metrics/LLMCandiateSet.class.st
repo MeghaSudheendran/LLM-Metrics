@@ -16,9 +16,9 @@ LLMCandiateSet >> candidate [
 ]
 
 { #category : 'accessing' }
-LLMCandiateSet >> candidate: anObject [
+LLMCandiateSet >> candidate: aString [
 
-	candidate := anObject
+	candidate := self preprocessData: aString
 ]
 
 { #category : 'operations' }
@@ -135,6 +135,13 @@ LLMCandiateSet >> isBoundaryNgram: ngram [
 	ngram last = '<s>' ifTrue: [ ^ true ].
 
 	^ self isBoundaryNgram: ngram history
+]
+
+{ #category : 'preprocess' }
+LLMCandiateSet >> preprocessData: aString [
+	^ aString substrings 
+
+	
 ]
 
 { #category : 'accessing' }
