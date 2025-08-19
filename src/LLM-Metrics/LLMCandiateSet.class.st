@@ -139,9 +139,16 @@ LLMCandiateSet >> isBoundaryNgram: ngram [
 
 { #category : 'preprocess' }
 LLMCandiateSet >> preprocessData: aString [
-	^ aString substrings 
 
+	| sentences cleanedSentences |
 	
+	sentences := aString substrings: '.'.
+
+	cleanedSentences:= sentences flatCollect: [ :sentence | sentence substrings collect:[:word |
+                (word select: [:char | char isAlphaNumeric]) asLowercase
+            ]. ].
+
+	^ cleanedSentences
 ]
 
 { #category : 'accessing' }

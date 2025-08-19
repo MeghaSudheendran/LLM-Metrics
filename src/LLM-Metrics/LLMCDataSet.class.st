@@ -11,38 +11,45 @@ Class {
 { #category : 'calculating' }
 LLMCDataSet >> brevityPenalty [
 
-	| reference_length translation_length ratio |
-	translation_length := 0.
-	reference_length := 0.
+	| ratio c r |
+	c := 0.
+	r := 0.
 	candidateSets do: [ :item |
 			| min_l_ref |
 			"min_l_ref = Float infinity.
 			item references do: [ :ref | min_l_ref := min_l_ref min: ref size ]."
 			min_l_ref := (item references collect: #size) min.
 
-			reference_length := reference_length + min_l_ref.
-			translation_length := translation_length + item candidate size ].
+			r := r + min_l_ref.
+			c := c + item candidate size ].
 
-	ratio := translation_length / reference_length.
-	ratio > 1.0
+	ratio := r / c.
+	c > r
 		ifTrue: [ ^ 1 ]
-		ifFalse: [ ^ (1 - (1 / ratio)) exp ]
+		ifFalse: [ ^ (1 - ratio) exp ]
+
+	"ratio > 1.0
+		ifTrue: [ ^ 1 ]
+		ifFalse: [ ^ (1 - (1 / ratio)) exp ]"
 ]
 
 { #category : 'calculating' }
 LLMCDataSet >> calculateBlueScore: maxOrder [
 
-	| sum |
+	| sum precision count |
 	sum := 0.
+	count := 0.
 	1 to: maxOrder do: [ :order |
-	sum := sum + (1 / maxOrder * (self precision: order) ln) ].
+			precision := self precision: order.
 
+			precision > 0 ifTrue: [
+					sum := sum + precision ln.
+					count := count + 1 ] ].
 
-	^ self brevityPenalty * sum exp
-	
+	^ count = 0
+		  ifTrue: [ 0 ]
+		  ifFalse: [ self brevityPenalty * (sum / count) exp ]
 
-
-"precision=2/7 for unigram."
 ]
 
 { #category : 'calculating' }
@@ -84,5 +91,6 @@ LLMCDataSet >> modifiedRecall: n [
 { #category : 'calculating' }
 LLMCDataSet >> precision: n [
 
-	^(candidateSets sum: [ :cs | cs countClip: n ]) / (candidateSets sum: [ :cs | cs count: n ])
+	^(candidateSets sum: [ :cs | cs countClip: n ]) / (candidateSets sum: [ :cs | cs count: n ]).
+	"^ Set with: (candidateSets sum: [ :cs | cs countClip: n ]) with: (candidateSets sum: [ :cs | cs count: n ])"
 ]

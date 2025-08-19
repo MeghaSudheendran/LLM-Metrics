@@ -98,8 +98,8 @@ LLMCandiateSetTest >> testGetWeightedNgramsOrder [
 LLMCandiateSetTest >> testPreprocessData [
 
 	| aString |
-	aString := 'def sum(int a, int b):'.
-	self assert: (llmcandidateSet preprocessData: aString) equals: #('def' 'sum(int' 'a,' 'int' 'b):')
+	aString := 'Hello, this is some text.'.
+	self assert: (llmcandidateSet preprocessData: aString) equals: #('hello' 'this' 'is' 'some' 'text')
 ]
 
 { #category : 'tests' }
