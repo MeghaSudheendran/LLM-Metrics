@@ -74,8 +74,7 @@ LLMCDataSetTest >> testBrevityPenalty1 [
 	llmCDataSet candidateSets add: llmCandidateSet.
 
 
-	self assert: llmCDataSet brevityPenalty equals: 1.
-
+	self assert: llmCDataSet brevityPenalty equals: 1
 ]
 
 { #category : 'tests' }
@@ -96,8 +95,7 @@ LLMCDataSetTest >> testBrevityPenalty2 [
 	llmCDataSet candidateSets add: llmCandidateSet.
 
 
-	self assert: llmCDataSet brevityPenalty equals: -0.5 exp.
-
+	self assert: llmCDataSet brevityPenalty equals: -0.5 exp
 ]
 
 { #category : 'tests' }
@@ -118,10 +116,12 @@ LLMCDataSetTest >> testCalculateBlueScore [
 		assert: (llmCDataSet calculateBlueScore: 1)
 		closeTo: 0.28571
 		precision: 5.
-	self assert: (llmCDataSet calculateBlueScore: 2) equals: 0.2857142857142857.
-	self assert: (llmCDataSet calculateBlueScore: 4) equals: 0.2857142857142857.
-		
-	
+	self
+		assert: (llmCDataSet calculateBlueScore: 2)
+		equals: 0.2857142857142857.
+	self
+		assert: (llmCDataSet calculateBlueScore: 4)
+		equals: 0.2857142857142857
 ]
 
 { #category : 'tests' }
@@ -141,10 +141,7 @@ LLMCDataSetTest >> testCalculateBlueScore1 [
 
 
 	self assert: (llmCDataSet calculateBlueScore: 4) equals: 1.
-	"self
-		assert: (llmCDataSet calculateBlueScore: 1)
-		closeTo: 0.28571
-		precision: 5"
+
 ]
 
 { #category : 'tests' }
@@ -167,11 +164,10 @@ LLMCDataSetTest >> testCalculateBlueScore2 [
 	llmCDataSet candidateSets add: llmCandidateSet.
 
 
-	self assert: (llmCDataSet calculateBlueScore: 4) equals: 0.5045666840058485
-	"self
-		assert: (llmCDataSet calculateBlueScore: 1)
-		closeTo: 0.28571
-		precision: 5"
+	self
+		assert: (llmCDataSet calculateBlueScore: 4)
+		equals: 0.5045666840058485.
+	
 ]
 
 { #category : 'tests' }
@@ -194,11 +190,10 @@ LLMCDataSetTest >> testCalculateBlueScore3 [
 	llmCDataSet candidateSets add: llmCandidateSet.
 
 
-	self assert: (llmCDataSet calculateBlueScore: 4) equals: 0.18174699151949172
-	"self
-		assert: (llmCDataSet calculateBlueScore: 1)
-		closeTo: 0.28571
-		precision: 5"
+	self
+		assert: (llmCDataSet calculateBlueScore: 4)
+		equals: 0.18174699151949172.
+	
 ]
 
 { #category : 'tests' }
@@ -217,11 +212,9 @@ LLMCDataSetTest >> testCalculateBlueScore4 [
 	llmCDataSet candidateSets add: llmCandidateSet.
 
 
-	self assert: (llmCDataSet calculateBlueScore: 4) equals: 0.2857142857142857.
-	"self
-		assert: (llmCDataSet calculateBlueScore: 1)
-		closeTo: 0.28571
-		precision: 5"
+	self
+		assert: (llmCDataSet calculateBlueScore: 4)
+		equals: 0.2857142857142857
 ]
 
 { #category : 'tests' }
@@ -237,27 +230,18 @@ LLMCDataSetTest >> testCalculateWeightedNgramMatch [
 		(llmCandidateSet preprocessData: 'def add ( ):').
 
 	llmCDataSet candidateSets: OrderedCollection new.
-	llmCDataSet candidateSets add: llmCandidateSet
-
-	"self assert: (llmCDataSet calculateWeightedNgramMatch: 1) equals: ?"
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testModifiedRecall [
-
-	| llmCandidateSet |
-	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'def sum ( ):'.
-	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add:
-		(llmCandidateSet preprocessData: 'def product ( ):').
-	llmCandidateSet references add:
-		(llmCandidateSet preprocessData: 'def add ( ):').
-
-	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
 
-	self assert: (llmCDataSet modifiedRecall: 1) equals: 7 / 8
+	"weighted_precision =(5/6)
+	ln precison = -0.1823215567939546
+	sum = -0.1823215567939546
+	bp=1
+	1*(-0.1823215567939546/1)exp
+	0.83333
+	"
+	self
+		assert: (llmCDataSet calculateWeightedNgramMatch: 1)
+		equals: 0.8333333333333334
 ]
 
 { #category : 'tests' }
@@ -276,30 +260,13 @@ LLMCDataSetTest >> testPrecision [
 	llmCDataSet candidateSets add: llmCandidateSet.
 
 	self assert: (llmCDataSet precision: 1) equals: 2 / 7.
-	self assert: (llmCDataSet precision: 2) equals: 0.
-	
-
-"
-
-	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'the the cat'.
-	llmCandidateSet references: OrderedCollection new.
-	llmCandidateSet references add:
-		(llmCandidateSet preprocessData: 'the cat is on the mat').
-	llmCandidateSet references add:
-		(llmCandidateSet preprocessData: 'there is a cat on the mat').
-
-	llmCDataSet candidateSets: OrderedCollection new.
-	llmCDataSet candidateSets add: llmCandidateSet.
-
-	self assert: (llmCDataSet precision: 2) equals: 1 / 2"
+	self assert: (llmCDataSet precision: 2) equals: 0
 ]
 
 { #category : 'tests' }
 LLMCDataSetTest >> testPrecision1 [
 
 	| llmCandidateSet |
-	
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate:
 		'It is to insure the troops forever hearing the activity guidebook that party direct.'.
@@ -314,16 +281,13 @@ LLMCDataSetTest >> testPrecision1 [
 
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
-	self assert: (llmCDataSet precision: 1) equals: 8 / 14.
-	"self assert: (llmCDataSet precision: 1) equals: (Set with:8 with:14)"
-
+	self assert: (llmCDataSet precision: 1) equals: 8 / 14
 ]
 
 { #category : 'tests' }
 LLMCDataSetTest >> testPrecision2 [
 
 	| llmCandidateSet |
-	
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidate:
 		'It is a guide to action which ensures that the military always obeys the commands of the party.'.
@@ -338,7 +302,23 @@ LLMCDataSetTest >> testPrecision2 [
 
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
-	self assert: (llmCDataSet precision: 1) equals: 17 / 18.
-	"self assert: (llmCDataSet precision: 1) equals: (Set with:17 with:18)"
+	self assert: (llmCDataSet precision: 1) equals: 17 / 18
+]
 
+{ #category : 'tests' }
+LLMCDataSetTest >> testWeightedPrecision [
+
+	| llmCandidateSet |
+	llmCandidateSet := LLMCandiateSet new.
+	llmCandidateSet candidate: 'def sum ( ):'.
+	llmCandidateSet references: OrderedCollection new.
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'def product ( ):').
+	llmCandidateSet references add:
+		(llmCandidateSet preprocessData: 'def add ( ):').
+
+	llmCDataSet candidateSets: OrderedCollection new.
+	llmCDataSet candidateSets add: llmCandidateSet.
+
+	self assert: (llmCDataSet weightedPrecision: 1) equals: 5 / 6
 ]

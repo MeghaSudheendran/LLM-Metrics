@@ -1,3 +1,7 @@
+"
+LLMCandidateSet stores candidate texts together with their corresponding references.  
+This allows evaluation metrics such as BLEU (and others) to be computed on them.
+"
 Class {
 	#name : 'LLMCandiateSet',
 	#superclass : 'Object',
@@ -19,33 +23,6 @@ LLMCandiateSet >> candidate [
 LLMCandiateSet >> candidate: aString [
 
 	candidate := self preprocessData: aString
-]
-
-{ #category : 'operations' }
-LLMCandiateSet >> clippedSum: n [
-
-	| referenceNgramsCount candidateNgrams grams bags candidateNgramsCount maxCountReference clippedCount minCountRefCand weight |
-	clippedCount := 0.
-	referenceNgramsCount := OrderedCollection new.
-	referenceNgramsCount addAll: (references collect: [ :reference |
-				 grams := self getNgrams: reference order: n.
-				 bags := Bag withAll: grams.
-				 bags ]).
-
-	candidateNgrams := self getNgrams: candidate order: n.
-	candidateNgramsCount := Bag withAll: candidateNgrams.
-
-	candidateNgrams asSet do: [ :cand |
-			maxCountReference := 0.
-			minCountRefCand := candidateNgramsCount occurrencesOf: cand.
-			referenceNgramsCount do: [ :ref |
-				maxCountReference := maxCountReference max:
-					                     (ref occurrencesOf: cand) ].
-			minCountRefCand := maxCountReference min: minCountRefCand.
-			weight := self getWeightOfNgram: cand.
-			clippedCount := clippedCount + (minCountRefCand * weight) ].
-
-	^ clippedCount
 ]
 
 { #category : 'accessing' }
@@ -73,11 +50,40 @@ LLMCandiateSet >> countClip: n [
 	candidateNgrams asSet do: [ :cand |
 			maxCountReference := 0.
 			minCountRefCand := candidateNgramsCount occurrencesOf: cand.
+
+			referenceNgramsCount do: [ :ref |
+				maxCountReference := maxCountReference max:
+					                     (ref occurrencesOf: cand) ].
+
+			minCountRefCand := maxCountReference min: minCountRefCand.
+			clippedCount := clippedCount + minCountRefCand ].
+
+	^ clippedCount
+]
+
+{ #category : 'operations' }
+LLMCandiateSet >> countClipWeighted: n [
+
+	| referenceNgramsCount candidateNgrams grams bags candidateNgramsCount maxCountReference clippedCount minCountRefCand weight |
+	clippedCount := 0.
+	referenceNgramsCount := OrderedCollection new.
+	referenceNgramsCount addAll: (references collect: [ :reference |
+				 grams := self getNgrams: reference order: n.
+				 bags := Bag withAll: grams.
+				 bags ]).
+
+	candidateNgrams := self getNgrams: candidate order: n.
+	candidateNgramsCount := Bag withAll: candidateNgrams.
+
+	candidateNgrams asSet do: [ :cand |
+			maxCountReference := 0.
+			minCountRefCand := candidateNgramsCount occurrencesOf: cand.
 			referenceNgramsCount do: [ :ref |
 				maxCountReference := maxCountReference max:
 					                     (ref occurrencesOf: cand) ].
 			minCountRefCand := maxCountReference min: minCountRefCand.
-			clippedCount := clippedCount + minCountRefCand ].
+			weight := self getWeightOfNgram: cand.
+			clippedCount := clippedCount + (minCountRefCand * weight) ].
 
 	^ clippedCount
 ]
@@ -113,20 +119,6 @@ LLMCandiateSet >> getWeightOfNgram: ngram [
 		ifFalse: [ ^ 1 ]
 ]
 
-{ #category : 'operations' }
-LLMCandiateSet >> getWeightedNgrams: reference order: o [
-
-	| ngramModel ngrams weightedGramDict |
-	ngramModel := (AINgramModel order: o) trainOn: { reference }.
-	ngrams := ngramModel asOrderedCollection reject: [ :ngram |
-		          self isBoundaryNgram: ngram ].
-
-	weightedGramDict := Dictionary new.
-	ngrams do: [ :gram |
-		weightedGramDict at: gram put: (self getWeightOfNgram: gram) ].
-	^ weightedGramDict
-]
-
 { #category : 'testing' }
 LLMCandiateSet >> isBoundaryNgram: ngram [
 
@@ -141,12 +133,15 @@ LLMCandiateSet >> isBoundaryNgram: ngram [
 LLMCandiateSet >> preprocessData: aString [
 
 	| sentences cleanedSentences |
-	
+
 	sentences := aString substrings: '.'.
 
-	cleanedSentences:= sentences flatCollect: [ :sentence | sentence substrings collect:[:word |
-                (word select: [:char | char isAlphaNumeric]) asLowercase
-            ]. ].
+	cleanedSentences := sentences flatCollect: [ :sentence |
+			                    sentence substrings
+				                    collect: [ :word |
+				                    (word select: [ :char | char isAlphaNumeric ])
+					                    asLowercase ]
+				                    thenSelect: [ :str | str isNotEmpty ] ].
 
 	^ cleanedSentences
 ]
