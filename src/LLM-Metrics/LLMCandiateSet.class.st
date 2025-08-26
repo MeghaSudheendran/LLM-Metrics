@@ -158,6 +158,17 @@ LLMCandiateSet >> references: aCollection [
 	references := aCollection
 ]
 
+{ #category : 'parsing' }
+LLMCandiateSet >> tokenize: wordsInAString [
+    "Tokenizes a string into words, keeping certain delimiters."
+|token_list|
+    token_list :=wordsInAString findTokens: ' ;:.,<>[]{}!@#$%^&*()?' 
+                                keep: ';:.'',<>[]{}!$?'.
+
+    ^ token_list flattened 
+
+]
+
 { #category : 'accessing' }
 LLMCandiateSet >> weightedCount: n [
 

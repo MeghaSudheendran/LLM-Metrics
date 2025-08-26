@@ -71,6 +71,17 @@ LLMCandiateSetTest >> testPreprocessData [
 ]
 
 { #category : 'tests' }
+LLMCandiateSetTest >> testTokenize [
+
+	| aString |
+	aString := 'today''s weather is -32.4 degrees in France.'.
+	self
+		assert: (llmcandidateSet tokenize: aString)
+		equals: #('today''s' 'weather' 'is' '-32' '.' '4' 'degrees' 'in'
+'France' '.' )
+]
+
+{ #category : 'tests' }
 LLMCandiateSetTest >> testWeightedCount [
 
 	llmcandidateSet candidate: 'def sum ( ) :'.
