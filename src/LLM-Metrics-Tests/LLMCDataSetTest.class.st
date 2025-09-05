@@ -326,14 +326,60 @@ LLMCDataSetTest >> testPrecision2 [
 
 { #category : 'tests' }
 LLMCDataSetTest >> testSubtreesEquals [
-"All children match"
+	"All children match"
+
 	| candidateRoots referenceRoots |
-	candidateRoots := llmCDataSet getSubtreesOfHeight2: 
+	candidateRoots := llmCDataSet getSubtreesOfHeight2:
 		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
 	referenceRoots := llmCDataSet getSubtreesOfHeight2:
 		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
+	self
+		assert: candidateRoots first class
+		equals: referenceRoots first class.
+
 	self assert:
-		(llmCDataSet subtrees: candidateRoots Equals: referenceRoots)
+		(llmCDataSet subtrees: candidateRoots equals: referenceRoots)
+]
+
+{ #category : 'tests' }
+LLMCDataSetTest >> testSubtreesEqualsRootDoesntMatch [
+
+	| candidateRoots referenceRoots |
+	candidateRoots := llmCDataSet getSubtreesOfHeight2:
+		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
+	referenceRoots := llmCDataSet getSubtreesOfHeight2:
+		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_subroutine.f90'.
+
+	self assert: candidateRoots first class ~= referenceRoots first class
+]
+
+{ #category : 'tests' }
+LLMCDataSetTest >> testSubtreesEqualsRootMatch [
+
+	| candidateRoots referenceRoots |
+	candidateRoots := llmCDataSet getSubtreesOfHeight2:
+		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
+	referenceRoots := llmCDataSet getSubtreesOfHeight2:
+		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_candidate.f90'.
+
+	self assert: candidateRoots first class = referenceRoots first class
+	
+	
+
+]
+
+{ #category : 'tests' }
+LLMCDataSetTest >> testSubtreesMatchedCountInAnd [
+
+	| candidateRoots referenceRoots |
+	candidateRoots := llmCDataSet getSubtreesOfHeight2:
+		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
+	referenceRoots := llmCDataSet getSubtreesOfHeight2:
+		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_candidate.f90'.
+
+	llmCDataSet
+		subtreesMatchedCountIn: candidateRoots
+		and: referenceRoots
 ]
 
 { #category : 'tests' }

@@ -111,40 +111,31 @@ LLMCDataSet >> precision: n [
 ]
 
 { #category : 'calculating' }
-LLMCDataSet >> subtreeEquals: subTree1Root subTree2: subTree2Root [
+LLMCDataSet >> subtrees: subTrees1 equals: subTrees2 [
 
-	| subTree1Children subTree2Children |
-	(subTree1Root class equal: subTree2Root class)
-		ifTrue: [
-				subTree1Children := subTree1Root children.
-				subTree2Children := subTree1Root children 
-				
-				
-				]
-		ifFalse: [ ^ false ]
+	| matchedCount |
+	matchedCount := 0.
+	subTrees1 with: subTrees2 do: [ :s1 :s2 |
+			s1 class = s2 class
+				ifTrue: [
+						s1 children asOrderedCollection
+							with: s1 children asOrderedCollection
+							do: [ :c1 :c2 | ^ c1 class = c2 class ] ]
+				ifFalse: [ ^ matchedCount ] ]
 ]
 
 { #category : 'calculating' }
-LLMCDataSet >> subtrees: subTrees1 Equals: subTrees2 [
+LLMCDataSet >> subtreesMatchedCountIn: subTrees1 and: subTrees2 [
 
+	| matchedCount |
+	matchedCount := 0.
 	subTrees1 with: subTrees2 do: [ :s1 :s2 |
-			(s1 class = s2 class)
-				ifTrue: [
-						(s1 children asOrderedCollection) with: (s2 children asOrderedCollection) do: [ :c1 :c2 |
-								(c1 class = c2 class)
-									ifTrue: [ ^ true ]
-									ifFalse: [ ^ false ] ] ]
-				ifFalse: [ ^ false ] ]
-	"
-	| subTree1Children subTree2Children |
-	(subTree1Root class equal: subTree2Root class)
-		ifTrue: [
-				subTree1Children := subTree1Root children.
-				subTree2Children := subTree1Root children 
-				
-				
-				]
-		ifFalse: [ ^ false ]"
+			s1 class = s2 class ifTrue: [
+					s1 children asOrderedCollection
+						with: s1 children asOrderedCollection
+						do: [ :c1 :c2 |
+							c1 class = c2 class ifTrue: [ matchedCount := matchedCount + 1 ] ] ] ].
+	^ matchedCount
 ]
 
 { #category : 'calculating' }
