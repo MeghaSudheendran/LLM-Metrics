@@ -87,11 +87,64 @@ LLMCDataSet >> candidateSets: anObject [
 ]
 
 { #category : 'calculating' }
+LLMCDataSet >> getSubtreesOfHeight2: aPathToSourceCode [
+
+	^ (self getVisitor: aPathToSourceCode) subtreeRoots
+]
+
+{ #category : 'calculating' }
+LLMCDataSet >> getVisitor: aPathToSourceCode [
+
+	| fastModel visitor |
+	fastModel := FASTFortranImporter new onFile: aPathToSourceCode.
+	visitor := FASTFortranCountSubtreeVisitorComparing new.
+	visitor visitModel: fastModel.
+	^ visitor
+]
+
+{ #category : 'calculating' }
 LLMCDataSet >> precision: n [
 	"This quantity measures how many n-grams in the reference sentence are reproduced by the candidate sentence"
 
 	^ (candidateSets sum: [ :cs | cs countClip: n ])
 	  / (candidateSets sum: [ :cs | cs count: n ])
+]
+
+{ #category : 'calculating' }
+LLMCDataSet >> subtreeEquals: subTree1Root subTree2: subTree2Root [
+
+	| subTree1Children subTree2Children |
+	(subTree1Root class equal: subTree2Root class)
+		ifTrue: [
+				subTree1Children := subTree1Root children.
+				subTree2Children := subTree1Root children 
+				
+				
+				]
+		ifFalse: [ ^ false ]
+]
+
+{ #category : 'calculating' }
+LLMCDataSet >> subtrees: subTrees1 Equals: subTrees2 [
+
+	subTrees1 with: subTrees2 do: [ :s1 :s2 |
+			(s1 class = s2 class)
+				ifTrue: [
+						(s1 children asOrderedCollection) with: (s2 children asOrderedCollection) do: [ :c1 :c2 |
+								(c1 class = c2 class)
+									ifTrue: [ ^ true ]
+									ifFalse: [ ^ false ] ] ]
+				ifFalse: [ ^ false ] ]
+	"
+	| subTree1Children subTree2Children |
+	(subTree1Root class equal: subTree2Root class)
+		ifTrue: [
+				subTree1Children := subTree1Root children.
+				subTree2Children := subTree1Root children 
+				
+				
+				]
+		ifFalse: [ ^ false ]"
 ]
 
 { #category : 'calculating' }

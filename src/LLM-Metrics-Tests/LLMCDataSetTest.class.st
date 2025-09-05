@@ -245,6 +245,25 @@ LLMCDataSetTest >> testCalculateWeightedNgramMatch [
 ]
 
 { #category : 'tests' }
+LLMCDataSetTest >> testGetSubtreesOfHeight2 [
+
+	| subtrees |
+	subtrees := llmCDataSet getSubtreesOfHeight2:
+		            '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
+	self assert: subtrees size equals: 6
+]
+
+{ #category : 'tests' }
+LLMCDataSetTest >> testGetVisitor [
+
+	| visitor |
+	visitor := llmCDataSet getVisitor:
+		           '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
+	self assert:
+		(visitor isKindOf: FASTFortranCountSubtreeVisitorComparing)
+]
+
+{ #category : 'tests' }
 LLMCDataSetTest >> testPrecision [
 
 	| llmCandidateSet |
@@ -303,6 +322,18 @@ LLMCDataSetTest >> testPrecision2 [
 	llmCDataSet candidateSets: OrderedCollection new.
 	llmCDataSet candidateSets add: llmCandidateSet.
 	self assert: (llmCDataSet precision: 1) equals: 17 / 18
+]
+
+{ #category : 'tests' }
+LLMCDataSetTest >> testSubtreesEquals [
+"All children match"
+	| candidateRoots referenceRoots |
+	candidateRoots := llmCDataSet getSubtreesOfHeight2: 
+		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
+	referenceRoots := llmCDataSet getSubtreesOfHeight2:
+		                  '/Users/meghasudheendran/Desktop/Fortran_samples/tests/simple_function_reference.f90'.
+	self assert:
+		(llmCDataSet subtrees: candidateRoots Equals: referenceRoots)
 ]
 
 { #category : 'tests' }
