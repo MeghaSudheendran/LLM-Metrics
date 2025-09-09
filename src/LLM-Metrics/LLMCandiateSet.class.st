@@ -7,7 +7,9 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'references',
-		'candidate'
+		'candidate',
+		'referencesSourcecode',
+		'candidateSourcecode'
 	],
 	#category : 'LLM-Metrics',
 	#package : 'LLM-Metrics'
@@ -22,7 +24,19 @@ LLMCandiateSet >> candidate [
 { #category : 'accessing' }
 LLMCandiateSet >> candidate: aString [
 
-	candidate := self preprocessData: aString
+	candidate := aString
+]
+
+{ #category : 'accessing' }
+LLMCandiateSet >> candidateSourcecode [
+
+	^ candidateSourcecode
+]
+
+{ #category : 'accessing' }
+LLMCandiateSet >> candidateSourcecode: aString [
+
+	candidateSourcecode := aString
 ]
 
 { #category : 'accessing' }
@@ -156,6 +170,18 @@ LLMCandiateSet >> references [
 LLMCandiateSet >> references: aCollection [
 
 	references := aCollection
+]
+
+{ #category : 'accessing' }
+LLMCandiateSet >> referencesSourcecode [
+
+	^ referencesSourcecode
+]
+
+{ #category : 'accessing' }
+LLMCandiateSet >> referencesSourcecode: aCollection [
+
+	referencesSourcecode := aCollection
 ]
 
 { #category : 'parsing' }

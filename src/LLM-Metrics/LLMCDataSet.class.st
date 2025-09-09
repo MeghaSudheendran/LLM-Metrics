@@ -13,7 +13,7 @@ Class {
 	#package : 'LLM-Metrics'
 }
 
-{ #category : 'calculating' }
+{ #category : 'calculating-bluescore' }
 LLMCDataSet >> brevityPenalty [
 "This function penalizes shorter candidate translations to avoid rewarding incomplete translations."
 	| ratio c r |
@@ -34,7 +34,24 @@ LLMCDataSet >> brevityPenalty [
 	
 ]
 
-{ #category : 'calculating' }
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> calculateASTMatchScore [
+	"Main Function to calculate AST match score for the Metric codeblue"
+
+	| astMatchCount totalCount matchResult |
+	astMatchCount := 0.
+	totalCount := 0.
+	candidateSets do: [ :item |
+			matchResult := self
+				               getMatchedCountForOneCandidate: item candidateSourcecode
+				               andReferences: item referencesSourcecode.
+			astMatchCount := astMatchCount + matchResult first.
+			totalCount := totalCount + matchResult second ].
+
+	^ astMatchCount / totalCount
+]
+
+{ #category : 'calculating-bluescore' }
 LLMCDataSet >> calculateBlueScore: maxOrder [
 	"This function evaluates the candidate translation against the reference translations.
 It is a weighted geometric mean of all the modified n-gram precisions, multiplied by the brevity penalty.
@@ -86,23 +103,82 @@ LLMCDataSet >> candidateSets: anObject [
 	candidateSets := anObject
 ]
 
-{ #category : 'calculating' }
-LLMCDataSet >> getSubtreesOfHeight2: aPathToSourceCode [
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> countMatchedSubtreesIn: candidateSubTreesList and: referenceSubTreesList [
+	"compare two lists of subtrees and return the number of match"
 
-	^ (self getVisitor: aPathToSourceCode) subtreeRoots
+	| matchedCount |
+	matchedCount := 0.
+
+	referenceSubTreesList do: [ :refTree |
+			(candidateSubTreesList anySatisfy: [ :candTree |
+				 self subtree: refTree equals: candTree ]) ifTrue: [
+				matchedCount := matchedCount + 1 ] ].
+	^ matchedCount
 ]
 
-{ #category : 'calculating' }
-LLMCDataSet >> getVisitor: aPathToSourceCode [
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> getASTFromPath: aPathToSourceCode [
 
-	| fastModel visitor |
-	fastModel := FASTFortranImporter new onFile: aPathToSourceCode.
-	visitor := FASTFortranCountSubtreeVisitorComparing new.
-	visitor visitModel: fastModel.
+	^ FASTFortranImporter new onFile: aPathToSourceCode
+]
+
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> getASTFromString: aSourceCodeString [
+	"fastModel from a code "
+
+	^ FASTFortranImporter new onSourceString: aSourceCodeString
+]
+
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> getASTMatch: candidate reference: ref [
+"function to get matching subtrees from the two list of subtrees and total count"
+	| candidateSubtrees referenceSubtrees |
+	candidateSubtrees := self getSubtreesOfHeight2: "list of subtrees"
+		                     (self getSubtreeVisitor: "FASTFortranSubtreeVisitor"
+			                      (self getASTFromString: candidate)). "FASTmodel"
+	referenceSubtrees := self getSubtreesOfHeight2:
+		                     (self getSubtreeVisitor:
+			                      (self getASTFromString: ref)).
+
+	^ Array with: (self
+		  countMatchedSubtreesIn: candidateSubtrees
+		  and: referenceSubtrees) with: referenceSubtrees size
+	
+	
+]
+
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> getMatchedCountForOneCandidate: candidate andReferences: references [
+	"One candidate can have multiple references. this function will accumulate the individual scores"
+
+	| matchedCount totalCount |
+	matchedCount := 0.
+	totalCount := 0.
+	references do: [ :ref |
+			matchedCount := matchedCount
+			                +
+			                (self getASTMatch: candidate reference: ref) first.
+			totalCount := totalCount
+			              + (self getASTMatch: candidate reference: ref) second ].
+	^ Array with: matchedCount with: totalCount
+]
+
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> getSubtreeVisitor: aModel [
+
+	| visitor |
+	visitor := FASTFortranSubtreeVisitor new.
+	visitor visitModel: aModel.
 	^ visitor
 ]
 
-{ #category : 'calculating' }
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> getSubtreesOfHeight2: visitor [
+	^ visitor subtreeRoots
+]
+
+{ #category : 'calculating-bluescore' }
 LLMCDataSet >> precision: n [
 	"This quantity measures how many n-grams in the reference sentence are reproduced by the candidate sentence"
 
@@ -110,32 +186,24 @@ LLMCDataSet >> precision: n [
 	  / (candidateSets sum: [ :cs | cs count: n ])
 ]
 
-{ #category : 'calculating' }
-LLMCDataSet >> subtrees: subTrees1 equals: subTrees2 [
-
-	| matchedCount |
-	matchedCount := 0.
-	subTrees1 with: subTrees2 do: [ :s1 :s2 |
-			s1 class = s2 class
-				ifTrue: [
-						s1 children asOrderedCollection
-							with: s1 children asOrderedCollection
-							do: [ :c1 :c2 | ^ c1 class = c2 class ] ]
-				ifFalse: [ ^ matchedCount ] ]
+{ #category : 'sorting' }
+LLMCDataSet >> sortChildren: aSetOfChildren [
+	^ aSetOfChildren asSortedCollection: [ :a :b | a className < b className ]
 ]
 
-{ #category : 'calculating' }
-LLMCDataSet >> subtreesMatchedCountIn: subTrees1 and: subTrees2 [
+{ #category : 'calculating-astmatch' }
+LLMCDataSet >> subtree: s1 equals: s2 [
+	"check whether 2 subtrees are equal"
 
-	| matchedCount |
-	matchedCount := 0.
-	subTrees1 with: subTrees2 do: [ :s1 :s2 |
-			s1 class = s2 class ifTrue: [
-					s1 children asOrderedCollection
-						with: s1 children asOrderedCollection
-						do: [ :c1 :c2 |
-							c1 class = c2 class ifTrue: [ matchedCount := matchedCount + 1 ] ] ] ].
-	^ matchedCount
+	s1 class = s2 class ifFalse: [ ^ false ].
+	s1 children size = s2 children size ifFalse: [ ^ false ].
+
+	"children are of type Set. So need to sort."
+	(self sortChildren: s1 children)
+		with: (self sortChildren: s2 children)
+		do: [ :c1 :c2 | c1 class = c2 class ifFalse: [ ^ false ] ].
+
+	^ true
 ]
 
 { #category : 'calculating' }
