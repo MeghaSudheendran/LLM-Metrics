@@ -21,13 +21,13 @@ LLMCodeBlueSubtreeEqualTest >> testNoMatchedSubtree [
 	| subtrees1 subtrees2 |
 
 	subtrees1 := FASTFortranStatementBlock new
-		addStatement: FASTFortranEntryStatement new;
-		addStatement: FASTFortranExitStatement new;
-		 yourself.
+						addStatement: FASTFortranEntryStatement new;
+						addStatement: FASTFortranExitStatement new;
+		 				yourself.
 	subtrees2 := FASTFortranStatementBlock new
-		addStatement: FASTFortranDoStatement new;
-		addStatement: FASTFortranElseStatement new;
-		yourself.
+						addStatement: FASTFortranDoStatement new;
+						addStatement: FASTFortranElseStatement new;
+						yourself.
 
 	self deny: (codeBleuAST subtree: subtrees1 equals: subtrees2)
 ]
@@ -116,13 +116,13 @@ LLMCodeBlueSubtreeEqualTest >> testWithDepth3 [
 
 	| subtrees1 subtrees2 |
 	subtrees1 := FASTFortranSubroutine new
-		statementBlock: FASTFortranStatementBlock new;
-		yourself.
+						statementBlock: FASTFortranStatementBlock new;
+						yourself.
 	subtrees2 := FASTFortranSubroutine new
-		statementBlock: (FASTFortranStatementBlock new
-			addStatement: FASTFortranExitStatement new;
-			yourself) ;
-		yourself.
+						statementBlock: (FASTFortranStatementBlock new
+								addStatement: FASTFortranExitStatement new;
+								yourself) ;
+						yourself.
 
 	self assert: (codeBleuAST subtree: subtrees1 equals: subtrees2)
 ]

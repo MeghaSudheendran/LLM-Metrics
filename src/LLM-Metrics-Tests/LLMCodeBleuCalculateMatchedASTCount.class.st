@@ -32,6 +32,7 @@ LLMCodeBleuCalculateMatchedASTCount >> testMatchingSubtreeWithMultipleLevels [
 						               yourself);
 				              yourself);
 		             yourself.
+		
 	subtrees2 := FASTFortranSubroutine new
 		             statementBlock: (FASTFortranStatementBlock new
 				              addStatement: FASTFortranEntryStatement new;
@@ -40,6 +41,8 @@ LLMCodeBleuCalculateMatchedASTCount >> testMatchingSubtreeWithMultipleLevels [
 						               yourself);
 				              yourself);
 		             yourself.
+		
+		
 	llmCodeBleuAST
 		calculateMatchedASTCountForaCandidate: subtrees1
 		andaReferece: subtrees2.
@@ -55,9 +58,11 @@ LLMCodeBleuCalculateMatchedASTCount >> testNoMatchedSubtree [
 		             addStatement: FASTFortranEntryStatement new;
 		             addStatement: FASTFortranExitStatement new;
 		             yourself.
+		
 	subtrees2 := FASTFortranStatementBlock new
 		             addStatement: FASTFortranDoStatement new;
 		             yourself.
+
 
 	llmCodeBleuAST
 		calculateMatchedASTCountForaCandidate: subtrees1
@@ -74,10 +79,12 @@ LLMCodeBleuCalculateMatchedASTCount >> testOneMatchedSubtree [
 		             addStatement: FASTFortranEntryStatement new;
 		             addStatement: FASTFortranExitStatement new;
 		             yourself.
+		
 	subtrees2 := FASTFortranStatementBlock new
 		             addStatement: FASTFortranEntryStatement new;
 		             addStatement: FASTFortranExitStatement new;
 		             yourself.
+
 
 	llmCodeBleuAST
 		calculateMatchedASTCountForaCandidate: subtrees1

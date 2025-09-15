@@ -29,14 +29,14 @@ LLMCodeBleuASTTest >> testCalculateASTMatchScore [
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidateSourcecode:
 		'INTEGER FUNCTION SIMPLEFUNCTION(a, b)
-      	INTEGER :: a, b
-      	SIMPLEFUNCTION = a + b
+      		INTEGER :: a, b
+      		SIMPLEFUNCTION = a + b
       END'.
 	llmCandidateSet referencesSourcecode: OrderedCollection new.
 	llmCandidateSet referencesSourcecode add:
 		'INTEGER FUNCTION SIMPLEFUNCTION(a, b)
-      	INTEGER :: a, b
-      	SIMPLEFUNCTION = a + b
+      		INTEGER :: a, b
+      		SIMPLEFUNCTION = a + b
       END'.
 
 
@@ -98,7 +98,6 @@ LLMCodeBleuASTTest >> testCalculateASTMatchScoreWithDepth3 [
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
 	llmCandidateSet candidateSourcecode: 'SUBROUTINE foo()
- 
 													END SUBROUTINE'.
 	llmCandidateSet referencesSourcecode: OrderedCollection new.
 	llmCandidateSet referencesSourcecode add: 'SUBROUTINE bar()
