@@ -2,7 +2,7 @@
 A LLMCDataSetTest is a test class for testing the behavior of LLMCDataSet
 "
 Class {
-	#name : 'LLMCDataSetTest',
+	#name : 'LLMBlueMetricTest',
 	#superclass : 'TestCase',
 	#instVars : [
 		'llmCDataSet'
@@ -12,44 +12,16 @@ Class {
 }
 
 { #category : 'running' }
-LLMCDataSetTest >> setUp [
+LLMBlueMetricTest >> setUp [
 
 	super setUp.
 
-	llmCDataSet := LLMCDataSet new.
+	llmCDataSet := LLMDataSet new.
 	
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testAllChildrenMatch [
-
-	| candidateRoots referenceRoots fastModelCand visitorCand fastModelRef visitorRef |
-	fastModelCand := FASTFortranImporter new onSourceString:
-		                 'function foo() result(r)
-  									integer :: r
-  									r = 1
-								end function'.
-	visitorCand := llmCDataSet getSubtreeVisitor: fastModelCand.
-	candidateRoots := llmCDataSet getSubtreesOfHeight2: visitorCand.
-
-	fastModelRef := FASTFortranImporter new onSourceString:
-		                'function foo() result(r)
-  									integer :: x
-  									x = 99
-								end function'.
-
-	visitorRef := llmCDataSet getSubtreeVisitor: fastModelRef.
-	referenceRoots := llmCDataSet getSubtreesOfHeight2: visitorRef.
-
-	
-	self assert: (candidateRoots size = referenceRoots size and: [
-				 (llmCDataSet
-					  countMatchedSubtreesIn: candidateRoots
-					  and: referenceRoots) = candidateRoots size ])
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testBrevityPenalty [
+LLMBlueMetricTest >> testBrevityPenalty [
 
 	| llmCandidateSet res |
 	llmCandidateSet := LLMCandiateSet new.
@@ -87,7 +59,7 @@ cand= 11
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testBrevityPenalty1 [
+LLMBlueMetricTest >> testBrevityPenalty1 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -106,7 +78,7 @@ LLMCDataSetTest >> testBrevityPenalty1 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testBrevityPenalty2 [
+LLMBlueMetricTest >> testBrevityPenalty2 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -127,33 +99,7 @@ LLMCDataSetTest >> testBrevityPenalty2 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateASTMatchScore [
-
-	| llmCandidateSet |
-	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidateSourcecode:
-		'INTEGER FUNCTION SIMPLEFUNCTION(a, b)
-      	INTEGER :: a, b
-      	SIMPLEFUNCTION = a + b
-      END'.
-	llmCandidateSet referencesSourcecode: OrderedCollection new.
-	llmCandidateSet referencesSourcecode add:
-		'INTEGER FUNCTION SIMPLEFUNCTION(a, b)
-      	INTEGER :: a, b
-      	SIMPLEFUNCTION = a + b
-      END'.
-	
-
-	llmCDataSet candidateSets: OrderedCollection new.
-	llmCDataSet candidateSets add: llmCandidateSet.
-
-	self
-		assert: (llmCDataSet calculateASTMatchScore)
-		equals: 1
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore [
+LLMBlueMetricTest >> testCalculateBlueScore [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -179,7 +125,7 @@ LLMCDataSetTest >> testCalculateBlueScore [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore1 [
+LLMBlueMetricTest >> testCalculateBlueScore1 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -199,7 +145,7 @@ LLMCDataSetTest >> testCalculateBlueScore1 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore2 [
+LLMBlueMetricTest >> testCalculateBlueScore2 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -225,7 +171,7 @@ LLMCDataSetTest >> testCalculateBlueScore2 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore3 [
+LLMBlueMetricTest >> testCalculateBlueScore3 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -251,7 +197,7 @@ LLMCDataSetTest >> testCalculateBlueScore3 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore4 [
+LLMBlueMetricTest >> testCalculateBlueScore4 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -272,7 +218,7 @@ LLMCDataSetTest >> testCalculateBlueScore4 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateWeightedNgramMatch [
+LLMBlueMetricTest >> testCalculateWeightedNgramMatch [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -299,139 +245,7 @@ LLMCDataSetTest >> testCalculateWeightedNgramMatch [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testGetASTMatchReference [
-
-	| candidate reference |
-	candidate := 'INTEGER FUNCTION SIMPLEFUNCTION(a, b)
-      	INTEGER :: a, b
-      	SIMPLEFUNCTION = a + b
-      END'.
-	reference := 'INTEGER FUNCTION SIMPLEFUNCTION(a, b)
-      	INTEGER :: a, b
-      	SIMPLEFUNCTION = a + b
-      END'.
-	self
-		assert: (llmCDataSet getASTMatch: candidate reference: reference) first
-		equals: 5
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testGetScoreForOneAndReferences [
-
-	| llmCandidateSet |
-	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidateSourcecode: 'function foo() result(r)
-       integer :: r
-       r = 1
-     end function'.
-	llmCandidateSet referencesSourcecode: OrderedCollection new.
-	llmCandidateSet referencesSourcecode add: 'function foo() result(r)
-       integer :: r
-       r = 42
-     end function'.
-	llmCandidateSet referencesSourcecode add: 'function foo() result(r)
-       integer :: r
-       r = 1
-     end function'.
-
-	self
-		assert: (llmCDataSet
-				 getMatchedCountForOneCandidate: llmCandidateSet candidateSourcecode
-				 andReferences: llmCandidateSet referencesSourcecode)
-		equals: #( 8 8 )
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testGetSubtreeVisitor [
-
-	| visitor fastModel |
-	fastModel := FASTFortranImporter new onSourceString:
-		             'function simplefunction(a, b) result(sum)
-  								integer, intent(in) :: a, b
-  								integer :: sum
-  								sum = a + b
-      					end function simplefunction'.
-	visitor := llmCDataSet getSubtreeVisitor: fastModel.
-	self assert: (visitor isKindOf: FASTFortranSubtreeVisitor)
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testGetSubtreesOfHeight2 [
-
-	| subtrees fastModel visitor |
-	fastModel := FASTFortranImporter new onSourceString:
-		             'function simplefunction(a, b) result(sum)
-  								integer, intent(in) :: a, b
-  								integer :: sum
-  								sum = a + b
-      					end function simplefunction'.
-	visitor := llmCDataSet getSubtreeVisitor: fastModel.
-
-	subtrees := llmCDataSet getSubtreesOfHeight2: visitor.
-	self assert: subtrees size equals: 6
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testNoChildrenMatch [
-
-	| candidateRoots referenceRoots fastModelCand visitorCand fastModelRef visitorRef |
-	fastModelCand := FASTFortranImporter new onSourceString:
-		                 'function foo() result(r)
-  									integer :: r
-  									r = 1
-								end function'.
-	visitorCand := llmCDataSet getSubtreeVisitor: fastModelCand.
-	candidateRoots := llmCDataSet getSubtreesOfHeight2: visitorCand.
-
-	fastModelRef := FASTFortranImporter new onSourceString:
-		                'function foo() result(r)
-  									real :: x
-  									x = 3.14
-									print *, x
-								end function'.
-
-	visitorRef := llmCDataSet getSubtreeVisitor: fastModelRef.
-	referenceRoots := llmCDataSet getSubtreesOfHeight2: visitorRef.
-
-	self assert:
-		candidateRoots first className equals: referenceRoots first className.
-	self
-		assert: (llmCDataSet
-				 countMatchedSubtreesIn: candidateRoots
-				 and: referenceRoots)
-		equals: 1
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testOneChildMatch [
-
-	| candidateRoots referenceRoots fastModelCand visitorCand fastModelRef visitorRef |
-	fastModelCand := FASTFortranImporter new onSourceString:
-		                 'function foo() result(r)
-       							integer :: r
-       							r = 1
-     							end function'.
-	visitorCand := llmCDataSet getSubtreeVisitor: fastModelCand.
-	candidateRoots := llmCDataSet getSubtreesOfHeight2: visitorCand.
-
-	fastModelRef := FASTFortranImporter new onSourceString:
-		                'function foo() result(r)
-       							integer :: r
-     							end function'.
-	visitorRef := llmCDataSet getSubtreeVisitor: fastModelRef.
-	referenceRoots := llmCDataSet getSubtreesOfHeight2: visitorRef.
-	self
-		assert: candidateRoots first className
-		equals: referenceRoots first className.
-	self
-		assert: (llmCDataSet
-				 countMatchedSubtreesIn: candidateRoots
-				 and: referenceRoots)
-		equals: 2
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testPrecision [
+LLMBlueMetricTest >> testPrecision [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -450,7 +264,7 @@ LLMCDataSetTest >> testPrecision [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testPrecision1 [
+LLMBlueMetricTest >> testPrecision1 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -471,7 +285,7 @@ LLMCDataSetTest >> testPrecision1 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testPrecision2 [
+LLMBlueMetricTest >> testPrecision2 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
@@ -492,97 +306,7 @@ LLMCDataSetTest >> testPrecision2 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testRootDoesNotMatch [
-
-	| candidateRoots referenceRoots fastModelCand visitorCand fastModelRef visitorRef |
-	fastModelCand := FASTFortranImporter new onSourceString:
-		                 'function foo() result(r)
-  									integer :: r
-  									r = 1
-								end function'.
-	visitorCand := llmCDataSet getSubtreeVisitor: fastModelCand.
-	candidateRoots := llmCDataSet getSubtreesOfHeight2: visitorCand.
-
-	fastModelRef := FASTFortranImporter new onSourceString:
-		                'subroutine bar()
-  									integer :: x
-  									x = 2
-								end subroutine'.
-
-	visitorRef := llmCDataSet getSubtreeVisitor: fastModelRef.
-	referenceRoots := llmCDataSet getSubtreesOfHeight2: visitorRef.
-
-	self assert:
-		candidateRoots first className ~= referenceRoots first className.
-
-	self deny: (llmCDataSet
-			 subtree: candidateRoots first
-			 equals: referenceRoots first)
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testSubtreeEquals [
-	"All children match"
-
-	| candidateRoots referenceRoots fastModelCand visitorCand fastModelRef visitorRef |
-	fastModelCand := FASTFortranImporter new onSourceString:
-		                 'function simplefunction(a, b) result(sum)
-  								integer, intent(in) :: a, b
-  								integer :: sum
-  								sum = a + b
-      					end function simplefunction'.
-	visitorCand := llmCDataSet getSubtreeVisitor: fastModelCand.
-	candidateRoots := llmCDataSet getSubtreesOfHeight2: visitorCand.
-
-	fastModelRef := FASTFortranImporter new onSourceString:
-		                'function simplefunction(x, y) result(sum)
-  								integer, intent(in) :: x, y
-  								integer :: sum
-  								sum = x + y
-      					end function simplefunction'.
-					
-	visitorRef := llmCDataSet getSubtreeVisitor: fastModelRef.
-	referenceRoots := llmCDataSet getSubtreesOfHeight2: visitorRef.
-	
-	self
-		assert: candidateRoots first class
-		equals: referenceRoots first class.
-		
-	self assert: (candidateRoots size = referenceRoots size and: [
-				 (llmCDataSet
-					  countMatchedSubtreesIn: candidateRoots
-					  and: referenceRoots) = candidateRoots size ])
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testSubtreesEqualsRootDoesntMatch [
-
-	| candidateRoots referenceRoots fastModelCand visitorCand fastModelRef visitorRef |
-	fastModelCand := FASTFortranImporter new onSourceString:
-		                 'function simplefunction(a, b) result(sum)
-  								integer, intent(in) :: a, b
-  								integer :: sum
-  								sum = a + b
-      					end function simplefunction'.
-	visitorCand := llmCDataSet getSubtreeVisitor: fastModelCand.
-	candidateRoots := llmCDataSet getSubtreesOfHeight2: visitorCand.
-
-	fastModelRef := FASTFortranImporter new onSourceString:
-		                'SUBROUTINE SIMPLE(a, b, result)
-        							INTEGER, INTENT(IN) :: a, b
-        							INTEGER, INTENT(OUT) :: result
-
-        							result = a + b
-      							END SUBROUTINE SIMPLE'.
-
-	visitorRef := llmCDataSet getSubtreeVisitor: fastModelRef.
-	referenceRoots := llmCDataSet getSubtreesOfHeight2: visitorRef.
-
-	self assert: candidateRoots first class ~= referenceRoots first class
-]
-
-{ #category : 'tests' }
-LLMCDataSetTest >> testWeightedPrecision [
+LLMBlueMetricTest >> testWeightedPrecision [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
