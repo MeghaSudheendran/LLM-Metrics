@@ -2,7 +2,7 @@
 A LLMCodeBleuASTTest is a test class for testing the behavior of LLMCodeBleuAST
 "
 Class {
-	#name : 'LLMCodeBleuCalculateMatchedASTCount',
+	#name : 'LLMCodeBleuCountMatchingSubtreesBetweenTest',
 	#superclass : 'TestCase',
 	#instVars : [
 		'llmCDataSet',
@@ -13,7 +13,7 @@ Class {
 }
 
 { #category : 'running' }
-LLMCodeBleuCalculateMatchedASTCount >> setUp [
+LLMCodeBleuCountMatchingSubtreesBetweenTest >> setUp [
 	super setUp.
 
 	llmCDataSet := LLMDataSet new.
@@ -21,9 +21,9 @@ LLMCodeBleuCalculateMatchedASTCount >> setUp [
 ]
 
 { #category : 'tests' }
-LLMCodeBleuCalculateMatchedASTCount >> testMatchingSubtreeWithMultipleLevels [
+LLMCodeBleuCountMatchingSubtreesBetweenTest >> testMatchingSubtreeWithMultipleLevels [
 
-	| subtrees1 subtrees2 |
+	| subtrees1 subtrees2 matchedCount |
 	subtrees1 := FASTFortranSubroutine new
 		             statementBlock: (FASTFortranStatementBlock new
 				              addStatement: FASTFortranEntryStatement new;
@@ -32,7 +32,7 @@ LLMCodeBleuCalculateMatchedASTCount >> testMatchingSubtreeWithMultipleLevels [
 						               yourself);
 				              yourself);
 		             yourself.
-		
+
 	subtrees2 := FASTFortranSubroutine new
 		             statementBlock: (FASTFortranStatementBlock new
 				              addStatement: FASTFortranEntryStatement new;
@@ -41,17 +41,19 @@ LLMCodeBleuCalculateMatchedASTCount >> testMatchingSubtreeWithMultipleLevels [
 						               yourself);
 				              yourself);
 		             yourself.
-		
-		
-	llmCodeBleuAST
-		calculateMatchedASTCountForaCandidate: subtrees1
-		andaReferece: subtrees2.
 
-	self assert: llmCodeBleuAST matchedCount equals: 3
+	matchedCount := llmCodeBleuAST matchedCount.
+	matchedCount := matchedCount
+	                +
+	                (llmCodeBleuAST
+		                 countMatchingSubtreesBetween: subtrees1
+		                 and: subtrees2).
+
+	self assert: matchedCount equals: 3
 ]
 
 { #category : 'tests' }
-LLMCodeBleuCalculateMatchedASTCount >> testNoMatchedSubtree [
+LLMCodeBleuCountMatchingSubtreesBetweenTest >> testNoMatchedSubtree [
 
 	| subtrees1 subtrees2 |
 	subtrees1 := FASTFortranStatementBlock new
@@ -65,30 +67,30 @@ LLMCodeBleuCalculateMatchedASTCount >> testNoMatchedSubtree [
 
 
 	llmCodeBleuAST
-		calculateMatchedASTCountForaCandidate: subtrees1
-		andaReferece: subtrees2.
+		countMatchingSubtreesBetween: subtrees1
+		and: subtrees2.
 
 	self assert: llmCodeBleuAST matchedCount equals: 0
 ]
 
 { #category : 'tests' }
-LLMCodeBleuCalculateMatchedASTCount >> testOneMatchedSubtree [
+LLMCodeBleuCountMatchingSubtreesBetweenTest >> testOneMatchedSubtree [
 
-	| subtrees1 subtrees2 |
+	| subtrees1 subtrees2 matchedCount |
 	subtrees1 := FASTFortranStatementBlock new
 		             addStatement: FASTFortranEntryStatement new;
 		             addStatement: FASTFortranExitStatement new;
 		             yourself.
-		
+
 	subtrees2 := FASTFortranStatementBlock new
 		             addStatement: FASTFortranEntryStatement new;
 		             addStatement: FASTFortranExitStatement new;
 		             yourself.
 
+	matchedCount := llmCodeBleuAST matchedCount.
+	matchedCount := matchedCount + (llmCodeBleuAST
+		                countMatchingSubtreesBetween: subtrees1
+		                and: subtrees2).
 
-	llmCodeBleuAST
-		calculateMatchedASTCountForaCandidate: subtrees1
-		andaReferece: subtrees2.
-
-	self assert: llmCodeBleuAST matchedCount equals: 1
+	self assert: matchedCount equals: 1
 ]

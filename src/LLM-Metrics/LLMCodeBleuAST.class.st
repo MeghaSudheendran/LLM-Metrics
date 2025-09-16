@@ -12,29 +12,34 @@ Class {
 { #category : 'calculating-astmatch' }
 LLMCodeBleuAST >> calculateASTMatchScore [
 	"Main Function to calculate AST match score for the Metric codeblue"
-
+"
+	totalCount := 0.
+	matchedCount := 0."
+	
 	candidateSets do: [ :item |
-			item referencesSourcecode do: [ :ref |
-					self
-						calculateMatchedASTCountForaCandidate:
-						(self getASTFromString: item candidateSourcecode)
-						andaReferece: (self getASTFromString: ref) ] ].
+			item referencesSourcecode do: [ :ref || refAST |
+				refAST := self getASTFromString: ref.
+				matchedCount := matchedCount  +
+					(self
+						countMatchingSubtreesBetween: (self getASTFromString: item candidateSourcecode)
+						and: refAST).
+				totalCount := totalCount + (self getSubtreesOfHeight2: refAST) size
+			] ].
 
 	^ matchedCount / totalCount
 ]
 
 { #category : 'calculating-astmatch' }
-LLMCodeBleuAST >> calculateMatchedASTCountForaCandidate: aCandidateAST andaReferece: aReferenceAST [
+LLMCodeBleuAST >> countMatchingSubtreesBetween: aCandidateAST and: aReferenceAST [
+	"update matched subtree count and total subtree count"
 
 	| candidateSubTreesList referenceSubTreesList |
 	candidateSubTreesList := self getSubtreesOfHeight2: aCandidateAST.
 	referenceSubTreesList := self getSubtreesOfHeight2: aReferenceAST.
 
-	referenceSubTreesList do: [ :refTree |
-			(candidateSubTreesList anySatisfy: [ :candTree |
-				 self subtree: refTree equals: candTree ]) ifTrue: [
-				matchedCount := matchedCount + 1 ] ].
-	totalCount := totalCount + referenceSubTreesList size
+	^referenceSubTreesList count: [ :refTree |
+			candidateSubTreesList anySatisfy: [ :candTree | self subtree: refTree equals: candTree ] ].	
+			
 ]
 
 { #category : 'calculating-astmatch' }
