@@ -27,7 +27,7 @@ LLMCandiateSetTest >> testClippedSum [
 	llmcandidateSet references: OrderedCollection new.
 	llmcandidateSet references add:
 		(llmcandidateSet preprocessData: 'def sum ( ) :').
-	llmcandidateSet candidate: 'def product ( ) :'.
+	llmcandidateSet candidate: (llmcandidateSet preprocessData:'def product ( ) :').
 
 	self assert: (llmcandidateSet countClipWeighted: 1) equals: 5.
 
@@ -40,7 +40,7 @@ LLMCandiateSetTest >> testCountClipWeighted [
 	llmcandidateSet references: OrderedCollection new.
 	llmcandidateSet references add:
 		(llmcandidateSet preprocessData: 'def sum ( ) :').
-	llmcandidateSet candidate: 'def product ( ) :'.
+	llmcandidateSet candidate: (llmcandidateSet preprocessData: 'def product ( ) :').
 
 	self assert: (llmcandidateSet countClipWeighted: 1) equals: 5.
 
@@ -84,7 +84,7 @@ LLMCandiateSetTest >> testTokenize [
 { #category : 'tests' }
 LLMCandiateSetTest >> testWeightedCount [
 
-	llmcandidateSet candidate: 'def sum ( ) :'.
+	llmcandidateSet candidate: (llmcandidateSet preprocessData:'def sum ( ) :').
 
 	self assert: (llmcandidateSet weightedCount: 1) equals: 6.
 	self assert: (llmcandidateSet weightedCount: 2) equals: 5

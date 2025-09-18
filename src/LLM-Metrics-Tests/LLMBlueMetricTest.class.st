@@ -2,7 +2,7 @@
 A LLMCDataSetTest is a test class for testing the behavior of LLMCDataSet
 "
 Class {
-	#name : 'LLMCDataSetTest',
+	#name : 'LLMBlueMetricTest',
 	#superclass : 'TestCase',
 	#instVars : [
 		'llmCDataSet'
@@ -12,20 +12,20 @@ Class {
 }
 
 { #category : 'running' }
-LLMCDataSetTest >> setUp [
+LLMBlueMetricTest >> setUp [
 
 	super setUp.
 
-	llmCDataSet := LLMCDataSet new.
+	llmCDataSet := LLMDataSet new.
 	
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testBrevityPenalty [
+LLMBlueMetricTest >> testBrevityPenalty [
 
 	| llmCandidateSet res |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'the the the the the the the'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'the the the the the the the').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'the cat is on the mat').
@@ -39,7 +39,7 @@ LLMCDataSetTest >> testBrevityPenalty [
 	self assert: llmCDataSet brevityPenalty equals: 1.
 
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'the the the'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'the the the').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'the cat is on the mat').
@@ -59,11 +59,11 @@ cand= 11
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testBrevityPenalty1 [
+LLMBlueMetricTest >> testBrevityPenalty1 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'A test'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'A test').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'A test').
@@ -78,11 +78,11 @@ LLMCDataSetTest >> testBrevityPenalty1 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testBrevityPenalty2 [
+LLMBlueMetricTest >> testBrevityPenalty2 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'A test'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'A test').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'A test hello').
@@ -99,11 +99,11 @@ LLMCDataSetTest >> testBrevityPenalty2 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore [
+LLMBlueMetricTest >> testCalculateBlueScore [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'the the the the the the the'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'the the the the the the the').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'the cat is on the mat').
@@ -125,11 +125,11 @@ LLMCDataSetTest >> testCalculateBlueScore [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore1 [
+LLMBlueMetricTest >> testCalculateBlueScore1 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'This is a test.'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'This is a test.').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'This is a test.').
@@ -145,12 +145,12 @@ LLMCDataSetTest >> testCalculateBlueScore1 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore2 [
+LLMBlueMetricTest >> testCalculateBlueScore2 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate:
-		'It is a guide to action which ensures that the military always obeys the commands of the party.'.
+	llmCandidateSet candidate:(llmCandidateSet preprocessData:
+		'It is a guide to action which ensures that the military always obeys the commands of the party.').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add: (llmCandidateSet preprocessData:
 			 'It is a guide to action that ensures that the military will forever heed Party commands.').
@@ -171,12 +171,12 @@ LLMCDataSetTest >> testCalculateBlueScore2 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore3 [
+LLMBlueMetricTest >> testCalculateBlueScore3 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate:
-		'It is to insure the troops forever hearing the activity guidebook that party direct.'.
+	llmCandidateSet candidate:(llmCandidateSet preprocessData:
+		'It is to insure the troops forever hearing the activity guidebook that party direct.').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add: (llmCandidateSet preprocessData:
 			 'It is a guide to action that ensures that the military will forever heed Party commands.').
@@ -197,11 +197,11 @@ LLMCDataSetTest >> testCalculateBlueScore3 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateBlueScore4 [
+LLMBlueMetricTest >> testCalculateBlueScore4 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'the the the the the the the.'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'the the the the the the the.').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'The cat is on the mat.').
@@ -218,11 +218,11 @@ LLMCDataSetTest >> testCalculateBlueScore4 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testCalculateWeightedNgramMatch [
+LLMBlueMetricTest >> testCalculateWeightedNgramMatch [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'def sum ( ):'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'def sum ( ):').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'def product ( ):').
@@ -245,11 +245,11 @@ LLMCDataSetTest >> testCalculateWeightedNgramMatch [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testPrecision [
+LLMBlueMetricTest >> testPrecision [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'the the the the the the the.'.
+	llmCandidateSet candidate: (llmCandidateSet preprocessData:'the the the the the the the.').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'the cat is on the mat.').
@@ -264,12 +264,12 @@ LLMCDataSetTest >> testPrecision [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testPrecision1 [
+LLMBlueMetricTest >> testPrecision1 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate:
-		'It is to insure the troops forever hearing the activity guidebook that party direct.'.
+	llmCandidateSet candidate:(llmCandidateSet preprocessData:
+		'It is to insure the troops forever hearing the activity guidebook that party direct.').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add: (llmCandidateSet preprocessData:
 			 'It is a guide to action that ensures that the military will forever heed Party commands.').
@@ -285,12 +285,12 @@ LLMCDataSetTest >> testPrecision1 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testPrecision2 [
+LLMBlueMetricTest >> testPrecision2 [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate:
-		'It is a guide to action which ensures that the military always obeys the commands of the party.'.
+	llmCandidateSet candidate:(llmCandidateSet preprocessData:
+		'It is a guide to action which ensures that the military always obeys the commands of the party.').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add: (llmCandidateSet preprocessData:
 			 'It is a guide to action that ensures that the military will forever heed Party commands.').
@@ -306,11 +306,11 @@ LLMCDataSetTest >> testPrecision2 [
 ]
 
 { #category : 'tests' }
-LLMCDataSetTest >> testWeightedPrecision [
+LLMBlueMetricTest >> testWeightedPrecision [
 
 	| llmCandidateSet |
 	llmCandidateSet := LLMCandiateSet new.
-	llmCandidateSet candidate: 'def sum ( ):'.
+	llmCandidateSet candidate:(llmCandidateSet preprocessData: 'def sum ( ):').
 	llmCandidateSet references: OrderedCollection new.
 	llmCandidateSet references add:
 		(llmCandidateSet preprocessData: 'def product ( ):').

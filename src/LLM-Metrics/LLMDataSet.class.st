@@ -4,7 +4,7 @@ LLMCDataset stores objects of LLMCandidateSet.
 It contains methods to calculate BLUE score, WeightedNgramMatch, precision, Brevity penalty etc. 
 "
 Class {
-	#name : 'LLMCDataSet',
+	#name : 'LLMDataSet',
 	#superclass : 'Object',
 	#instVars : [
 		'candidateSets'
@@ -13,8 +13,8 @@ Class {
 	#package : 'LLM-Metrics'
 }
 
-{ #category : 'calculating' }
-LLMCDataSet >> brevityPenalty [
+{ #category : 'calculating-bluescore' }
+LLMDataSet >> brevityPenalty [
 "This function penalizes shorter candidate translations to avoid rewarding incomplete translations."
 	| ratio c r |
 	c := 0.
@@ -34,8 +34,8 @@ LLMCDataSet >> brevityPenalty [
 	
 ]
 
-{ #category : 'calculating' }
-LLMCDataSet >> calculateBlueScore: maxOrder [
+{ #category : 'calculating-bluescore' }
+LLMDataSet >> calculateBlueScore: maxOrder [
 	"This function evaluates the candidate translation against the reference translations.
 It is a weighted geometric mean of all the modified n-gram precisions, multiplied by the brevity penalty.
 
@@ -57,7 +57,7 @@ In the original BLEU paper, the weight w is defined as 1/N, where N is the maxim
 ]
 
 { #category : 'calculating' }
-LLMCDataSet >> calculateWeightedNgramMatch: maxOrder [
+LLMDataSet >> calculateWeightedNgramMatch: maxOrder [
 "Compute the weighted n-gram match, where each n-gram precision is multiplied by the weight of its tokens. This gives higher importance to keywords in code compared to ordinary identifiers."
 
 	| sum weightedPrecision count |
@@ -75,27 +75,32 @@ LLMCDataSet >> calculateWeightedNgramMatch: maxOrder [
 ]
 
 { #category : 'accessing' }
-LLMCDataSet >> candidateSets [
+LLMDataSet >> candidateSets [
 
 	^ candidateSets
 ]
 
 { #category : 'accessing' }
-LLMCDataSet >> candidateSets: anObject [
+LLMDataSet >> candidateSets: anObject [
 
 	candidateSets := anObject
 ]
 
-{ #category : 'calculating' }
-LLMCDataSet >> precision: n [
+{ #category : 'calculating-bluescore' }
+LLMDataSet >> precision: n [
 	"This quantity measures how many n-grams in the reference sentence are reproduced by the candidate sentence"
 
 	^ (candidateSets sum: [ :cs | cs countClip: n ])
 	  / (candidateSets sum: [ :cs | cs count: n ])
 ]
 
+{ #category : 'sorting' }
+LLMDataSet >> sortChildren: aSetOfChildren [
+	^ aSetOfChildren asSortedCollection: [ :a :b | a className < b className ]
+]
+
 { #category : 'calculating' }
-LLMCDataSet >> weightedPrecision: n [
+LLMDataSet >> weightedPrecision: n [
 
 	| clipped weightedTotal |
 	clipped := candidateSets sum: [ :cs |
