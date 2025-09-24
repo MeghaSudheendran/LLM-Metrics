@@ -18,7 +18,11 @@ Class {
 { #category : 'accessing' }
 LLMCandiateSet >> candidate [
 
-	^ candidate
+	^ candidate ifNil: [
+			  self candidateSourcecode
+				  ifNil: [ nil ]
+				  ifNotNil: [
+				  candidate := self preprocessData: self candidateSourcecode ] ]
 ]
 
 { #category : 'accessing' }
@@ -36,7 +40,8 @@ LLMCandiateSet >> candidateSourcecode [
 { #category : 'accessing' }
 LLMCandiateSet >> candidateSourcecode: aString [
 
-	candidateSourcecode := aString
+	candidateSourcecode := aString.
+	candidate := nil "invalidate cache"
 ]
 
 { #category : 'accessing' }
@@ -163,7 +168,9 @@ LLMCandiateSet >> preprocessData: aString [
 { #category : 'accessing' }
 LLMCandiateSet >> references [
 
-	^ references 
+	^ references ifNil: [
+			  references := self referencesSourcecode collect: [ :each |
+				                self preprocessData: each ] ]
 ]
 
 { #category : 'accessing' }
@@ -181,7 +188,8 @@ LLMCandiateSet >> referencesSourcecode [
 { #category : 'accessing' }
 LLMCandiateSet >> referencesSourcecode: aCollection [
 
-	referencesSourcecode := aCollection
+	referencesSourcecode := aCollection.
+	references := nil "invalidate cache"
 ]
 
 { #category : 'parsing' }
