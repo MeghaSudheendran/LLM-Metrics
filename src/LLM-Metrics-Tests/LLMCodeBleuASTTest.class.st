@@ -89,7 +89,7 @@ LLMCodeBleuASTTest >> testCalculateASTMatchScoreFromPaper [
 
 	"no of subtree of ref is 9"
 	"14/15"
-	self assert: llmCodeBleuAST calculateASTMatchScore equals: 13/21.
+	self assert: llmCodeBleuAST calculateASTMatchScore equals: 14/15.
 
 
 ]

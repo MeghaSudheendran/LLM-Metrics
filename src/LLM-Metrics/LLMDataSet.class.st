@@ -86,6 +86,13 @@ LLMDataSet >> candidateSets: anObject [
 	candidateSets := anObject
 ]
 
+{ #category : 'initialization' }
+LLMDataSet >> initialize [
+
+	super initialize.
+	candidateSets := OrderedCollection new
+]
+
 { #category : 'calculating-bluescore' }
 LLMDataSet >> precision: n [
 	"This quantity measures how many n-grams in the reference sentence are reproduced by the candidate sentence"
