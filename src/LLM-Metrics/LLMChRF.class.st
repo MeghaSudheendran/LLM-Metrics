@@ -14,16 +14,7 @@ Class {
 { #category : 'as yet unclassified' }
 LLMChRF >> calculateChRF [
 
-	| totalWordMatchingCount totalRefCount totalHypCount totalChrMatchingCount totalChrRefCount totalChrHypCount |
-	totalWordMatchingCount := Dictionary new.
-	totalRefCount := Dictionary new.
-	totalHypCount := Dictionary new.
-	totalChrMatchingCount := Dictionary new.
-	totalChrRefCount := Dictionary new.
-	totalChrHypCount := Dictionary new.
-
-
-
+	| doc_totalWordMatchingCount doc_totalWordRefCount doc_totalWordCandCount doc_totalChrMatchingCount doc_totalChrRefCount doc_totalChrCandCount |
 	candidateSets do: [ :item |
 			| candidate references maxF wordNgramCount_candidate charNgramCount_candidate wordNgramCount_reference charNgramCount_reference bestWordMatchingCount bestWordRefCount bestWordCandCount bestChrMatchingCount bestChrRefCount bestChrCandCount |
 			bestWordMatchingCount := Dictionary new.
@@ -110,45 +101,37 @@ LLMChRF >> calculateChRF [
 					         + characterNgramFScore values sum
 					         / (maxWordOrder + maxCharOrder).
 
-					maxF > sentF ifTrue: [ "chrNgramF, chrNgramRec, chrNgramPrec"
+					maxF > sentF ifTrue: [
 							maxF := sentF.
 							bestWordMatchingCount := matchingWordNgramCounts.
 							bestWordRefCount := totalWordRefNgramCount.
 							bestWordCandCount := totalWordCandNgramCount.
 
 							bestChrMatchingCount := matchingChrNgramCounts.
-							bestChrRefCount := totalChrRefNgramCount at: 2.
-							bestChrCandCount := totalChrCandNgramCount at: 3 ] ].
+							bestChrRefCount := totalChrRefNgramCount.
+							bestChrCandCount := totalChrCandNgramCount ] ].
 
 
 			"collect document level ngram counts"
-			1 to: maxWordOrder do: [ :order |
-					totalWordMatchingCount
-						at: order
-						put: (totalWordMatchingCount at: order ifAbsent: [ 0 ])
-							+ (bestWordMatchingCount at: order ifAbsent: [ 0 ]).
-					totalRefCount
-						at: order
-						put: (totalRefCount at: order ifAbsent: [ 0 ])
-							+ (bestWordRefCount at: order ifAbsent: [ 0 ]).
-					totalHypCount
-						at: order
-						put: (totalHypCount at: order ifAbsent: [ 0 ])
-							+ (bestWordCandCount at: order ifAbsent: [ 0 ]) ].
 
-			1 to: maxCharOrder do: [ :order |
-					totalChrMatchingCount
-						at: order
-						put: (totalChrMatchingCount at: order ifAbsent: [ 0 ])
-							+ (bestChrMatchingCount at: order ifAbsent: [ 0 ]).
-					totalChrRefCount
-						at: order
-						put: (totalChrRefCount at: order ifAbsent: [ 0 ])
-							+ (bestChrRefCount at: order ifAbsent: [ 0 ]).
-					totalChrHypCount
-						at: order
-						put: (totalChrHypCount at: order ifAbsent: [ 0 ])
-							+ (bestChrCandCount at: order ifAbsent: [ 0 ]) ] ]
+			doc_totalWordMatchingCount := self
+				                              collectDocumentLevelTotalWordMatchingCountWith:
+				                              bestWordMatchingCount.
+			doc_totalWordRefCount := self
+				                         collectDocumentLevelTotalWordRefCountWith:
+				                         bestWordRefCount.
+			doc_totalWordCandCount := self
+				                          collectDocumentLevelTotalWordCandCountWith:
+				                          bestWordCandCount.
+
+			doc_totalChrMatchingCount := self
+				                             collectDocumentLevelCharMatchingCountWith:
+				                             bestChrMatchingCount.
+			doc_totalChrRefCount := self collectDocumentLevelCharRefCountWith:
+				                        bestChrRefCount.
+			doc_totalChrCandCount := self
+				                         collectDocumentLevelCharCandCountWith:
+				                         bestChrCandCount ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -225,6 +208,90 @@ LLMChRF >> calculateNgramRecall: matching totalRef: totalRef totalCand: totalCan
 	^ ngramRec
 ]
 
+{ #category : 'document-level' }
+LLMChRF >> collectDocumentLevelCharCandCountWith: bestChrCandCount [
+    | totalChrCandCount |
+    totalChrCandCount := Dictionary new.
+    1 to: maxCharOrder do: [:order |
+        totalChrCandCount
+            at: order
+            put: (totalChrCandCount at: order ifAbsent: [ 0 ])
+                + (bestChrCandCount at: order ifAbsent: [ 0 ]).
+    ].
+    ^ totalChrCandCount
+
+]
+
+{ #category : 'document-level' }
+LLMChRF >> collectDocumentLevelCharMatchingCountWith: bestChrMatchingCount [
+    | totalChrMatchingCount |
+    totalChrMatchingCount := Dictionary new.
+    1 to: maxCharOrder do: [:order |
+        totalChrMatchingCount
+            at: order
+            put: (totalChrMatchingCount at: order ifAbsent: [ 0 ])
+                + (bestChrMatchingCount at: order ifAbsent: [ 0 ]).
+    ].
+    ^ totalChrMatchingCount
+
+]
+
+{ #category : 'document-level' }
+LLMChRF >> collectDocumentLevelCharRefCountWith: bestChrRefCount [
+    | totalChrRefCount |
+    totalChrRefCount := Dictionary new.
+    1 to: maxCharOrder do: [:order |
+        totalChrRefCount
+            at: order
+            put: (totalChrRefCount at: order ifAbsent: [ 0 ])
+                + (bestChrRefCount at: order ifAbsent: [ 0 ]).
+    ].
+    ^ totalChrRefCount
+
+]
+
+{ #category : 'document-level' }
+LLMChRF >> collectDocumentLevelTotalWordCandCountWith: bestWordCandCount [
+    | totalWordCandCount |
+    totalWordCandCount := Dictionary new.
+    1 to: maxWordOrder do: [:order |
+        totalWordCandCount
+            at: order
+            put: (totalWordCandCount at: order ifAbsent: [ 0 ])
+                + (bestWordCandCount at: order ifAbsent: [ 0 ]).
+    ].
+    ^ totalWordCandCount
+
+]
+
+{ #category : 'document-level' }
+LLMChRF >> collectDocumentLevelTotalWordMatchingCountWith: bestWordMatchingCount [
+    | totalWordMatchingCount |
+    totalWordMatchingCount := Dictionary new.
+    1 to: maxWordOrder do: [:order |
+        totalWordMatchingCount
+            at: order
+            put: (totalWordMatchingCount at: order ifAbsent: [ 0 ])
+                + (bestWordMatchingCount at: order ifAbsent: [ 0 ]).
+    ].
+    ^ totalWordMatchingCount
+
+]
+
+{ #category : 'document-level' }
+LLMChRF >> collectDocumentLevelTotalWordRefCountWith: bestWordRefCount [
+    | totalWordRefCount |
+    totalWordRefCount := Dictionary new.
+    1 to: maxWordOrder do: [:order |
+        totalWordRefCount
+            at: order
+            put: (totalWordRefCount at: order ifAbsent: [ 0 ])
+                + (bestWordRefCount at: order ifAbsent: [ 0 ]).
+    ].
+    ^ totalWordRefCount
+
+]
+
 { #category : 'as yet unclassified' }
 LLMChRF >> getCharacterNgramCounts: aString [
 	"{
@@ -248,16 +315,6 @@ LLMChRF >> getCharacterNgramCounts: aString [
 			result at: n put: counts ].
 	
 	^ result
-]
-
-{ #category : 'as yet unclassified' }
-LLMChRF >> getMatchingCharacterNgramCount: charNgramCountCandidate referenceNgramCount: charNgramCountReference [
-
-	
-]
-
-{ #category : 'as yet unclassified' }
-LLMChRF >> getMatchingWordNgramCount: wordNgramCountCandidate referenceNgramCount: wordNgramCountReference [
 ]
 
 { #category : 'as yet unclassified' }
