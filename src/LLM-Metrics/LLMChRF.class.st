@@ -14,7 +14,7 @@ Class {
 { #category : 'as yet unclassified' }
 LLMChRF >> calculateChRF [
 
-	| doc_totalWordMatchingCount doc_totalWordRefCount doc_totalWordCandCount doc_totalChrMatchingCount doc_totalChrRefCount doc_totalChrCandCount |
+	| doc_totalWordMatchingCount doc_totalWordRefCount doc_totalWordCandCount doc_totalChrMatchingCount doc_totalChrRefCount doc_totalChrCandCount totalWordNgramFScore totalwordNgramPrecision totalwordNgramRecall totalCharacterNgramFScore totalCharacterNgramPrecision totalCharacterNgramRecall totalFScore totalPrecision totalRecall |
 	candidateSets do: [ :item |
 			| candidate references maxF wordNgramCount_candidate charNgramCount_candidate wordNgramCount_reference charNgramCount_reference bestWordMatchingCount bestWordRefCount bestWordCandCount bestChrMatchingCount bestChrRefCount bestChrCandCount |
 			bestWordMatchingCount := Dictionary new.
@@ -131,7 +131,47 @@ LLMChRF >> calculateChRF [
 				                        bestChrRefCount.
 			doc_totalChrCandCount := self
 				                         collectDocumentLevelCharCandCountWith:
-				                         bestChrCandCount ]
+				                         bestChrCandCount ].
+	totalWordNgramFScore := self
+		                        calculateNgramFscore:
+		                        doc_totalWordMatchingCount
+		                        totalRef: doc_totalWordRefCount
+		                        totalCand: doc_totalWordCandCount.
+	totalwordNgramPrecision := self
+		                           calculateNgramPrecision:
+		                           doc_totalWordMatchingCount
+		                           totalRef: doc_totalWordRefCount
+		                           totalCand: doc_totalWordCandCount.
+	totalwordNgramRecall := self
+		                        calculateNgramRecall:
+		                        doc_totalWordMatchingCount
+		                        totalRef: doc_totalWordRefCount
+		                        totalCand: doc_totalWordCandCount.
+	totalCharacterNgramFScore := self
+		                             calculateNgramFscore:
+		                             doc_totalChrMatchingCount
+		                             totalRef: doc_totalChrRefCount
+		                             totalCand: doc_totalChrCandCount.
+	totalCharacterNgramPrecision := self
+		                                calculateNgramPrecision:
+		                                doc_totalChrMatchingCount
+		                                totalRef: doc_totalChrRefCount
+		                                totalCand: doc_totalChrCandCount.
+	totalCharacterNgramRecall := self
+		                             calculateNgramRecall:
+		                             doc_totalChrMatchingCount
+		                             totalRef: doc_totalChrRefCount
+		                             totalCand: doc_totalChrCandCount.
+
+	totalFScore := totalWordNgramFScore values sum
+	               + totalCharacterNgramFScore values sum
+	               / (maxWordOrder + maxCharOrder).
+	totalPrecision := totalwordNgramPrecision values sum
+	                  + totalCharacterNgramPrecision values sum
+	                  / (maxWordOrder + maxCharOrder).
+	totalRecall := totalwordNgramRecall values sum
+	               + totalCharacterNgramRecall values sum
+	               / (maxWordOrder + maxCharOrder)
 ]
 
 { #category : 'as yet unclassified' }
@@ -292,7 +332,7 @@ LLMChRF >> collectDocumentLevelTotalWordRefCountWith: bestWordRefCount [
 
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'character-level' }
 LLMChRF >> getCharacterNgramCounts: aString [
 	"{
     1: {'t':2, 'r':1, 'a':2, 'n':2, 's':1, 'l':1, 'i':1, 'o':1},
@@ -317,7 +357,7 @@ LLMChRF >> getCharacterNgramCounts: aString [
 	^ result
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'word-level' }
 LLMChRF >> getWordNgramCounts: aString [
 	"{
     1: {'t':2, 'r':1, 'a':2, 'n':2, 's':1, 'l':1, 'i':1, 'o':1},
@@ -399,7 +439,7 @@ LLMChRF >> totalCountsFor: ngramsPerOrder [
 	^ ngramsPerOrder collect: [ :ngrams | ngrams size ]
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'word-level' }
 LLMChRF >> totalWordCandNgramCount: candidate ref: reference [
 "Can be used with wordNgrams as well as Charater Ngrams- two kinds of tests provided"
 	| totalCand |
@@ -416,7 +456,7 @@ LLMChRF >> totalWordCandNgramCount: candidate ref: reference [
 	^ totalCand
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'word-level' }
 LLMChRF >> totalWordRefNgramCount: candidate ref: reference [
 "Can be used with wordNgrams as well as Charater Ngrams- two kinds of tests provided"
 	| totalRef |
