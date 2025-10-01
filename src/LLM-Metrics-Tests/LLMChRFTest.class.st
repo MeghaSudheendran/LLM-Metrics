@@ -15,7 +15,120 @@ Class {
 LLMChRFTest >> setUp [
 	super setUp.
 	llmChRF := LLMChRF new.
+	llmChRF beta: 2.
+	llmChRF maxCharOrder: 4.
+	llmChRF maxWordOrder: 4
 	"Put here a common initialization logic for tests"
+]
+
+{ #category : 'tests' }
+LLMChRFTest >> testCalculateChRF [
+
+]
+
+{ #category : 'tests' }
+LLMChRFTest >> testCalculateNgramFscoreTotalRefTotalCand [
+
+	| matching totalRef totalCand result |
+	matching := Dictionary
+		            with: 1 -> 3
+		            with: 2 -> 1
+		            with: 3 -> 0
+		            with: 4 -> 0.
+	totalCand := Dictionary
+		             with: 1 -> 4
+		             with: 2 -> 3
+		             with: 3 -> 2
+		             with: 4 -> 1.
+	totalRef := Dictionary
+		            with: 1 -> 4
+		            with: 2 -> 3
+		            with: 3 -> 2
+		            with: 4 -> 1.
+	result := llmChRF
+		          calculateNgramFscore: matching
+		          totalRef: totalRef
+		          totalCand: totalCand.
+	self assert: (result at: 1) equals: 3 / 4.
+	self assert: (result at: 2) equals: 1 / 3.
+	self assert: (result at: 3) equals: 1e-16.
+	self assert: (result at: 4) equals: 1e-16
+
+	"self assert: result equals: 1.0833 "
+]
+
+{ #category : 'tests' }
+LLMChRFTest >> testCalculateNgramPrecisionTotalRefTotalCand [
+
+	| matching totalRef totalCand result |
+	matching := Dictionary
+		            with: 1 -> 3
+		            with: 2 -> 1
+		            with: 3 -> 0
+		            with: 4 -> 0.
+	totalCand := Dictionary
+		             with: 1 -> 4
+		             with: 2 -> 3
+		             with: 3 -> 2
+		             with: 4 -> 1.
+	totalRef := Dictionary
+		            with: 1 -> 4
+		            with: 2 -> 3
+		            with: 3 -> 2
+		            with: 4 -> 1.
+	result := llmChRF
+		          calculateNgramPrecision: matching
+		          totalRef: totalRef
+		          totalCand: totalCand.
+	self assert: (result at: 1) equals: 3 / 4.
+	self assert: (result at: 2) equals: 1 / 3.
+	self assert: (result at: 3) equals: 0.
+	self assert: (result at: 4) equals: 0
+]
+
+{ #category : 'tests' }
+LLMChRFTest >> testCalculateNgramRecallTotalRefTotalCand [
+
+	| matching totalRef totalCand result |
+	matching := Dictionary
+		            with: 1 -> 3
+		            with: 2 -> 1
+		            with: 3 -> 0
+		            with: 4 -> 0.
+	totalCand := Dictionary
+		             with: 1 -> 4
+		             with: 2 -> 3
+		             with: 3 -> 2
+		             with: 4 -> 1.
+	totalRef := Dictionary
+		            with: 1 -> 4
+		            with: 2 -> 3
+		            with: 3 -> 2
+		            with: 4 -> 1.
+	result := llmChRF
+		          calculateNgramRecall: matching
+		          totalRef: totalRef
+		          totalCand: totalCand.
+	self assert: (result at: 1) equals: 3 / 4.
+	self assert: (result at: 2) equals: 1 / 3.
+	self assert: (result at: 3) equals: 0.
+	self assert: (result at: 4) equals: 0
+]
+
+{ #category : 'tests' }
+LLMChRFTest >> testFindBestReferenceMatchForCandidateAgainstReferences [
+
+	| candidate references result |
+	candidate := 'INTEGER FUNCTION SUM(a, b)'.
+	references := OrderedCollection
+		              with: 'INTEGER FUNCTION PRODUCT(a, b)'
+		              with: 'INTEGER FUNCTION SUM(a, c)'.
+
+	result := llmChRF
+		          findBestReferenceMatchForCandidate: candidate
+		          againstReferences: references.
+
+	self assert: result equals: 0
 ]
 
 { #category : 'tests' }
@@ -162,7 +275,7 @@ LLMChRFTest >> testTotalCandNgramCountRefForWordNgram [
 ]
 
 { #category : 'tests' }
-LLMChRFTest >> testTotalRefNgramCountRefForCharNgram [
+LLMChRFTest >> testTotalWordRefNgramCountRefForCharNgram [
 
 	| candidate reference result |
 	candidate := llmChRF getCharacterNgramCounts: 'SUM(a, b)'.
@@ -179,7 +292,7 @@ LLMChRFTest >> testTotalRefNgramCountRefForCharNgram [
 ]
 
 { #category : 'tests' }
-LLMChRFTest >> testTotalRefNgramCountRefForWordNgram [
+LLMChRFTest >> testTotalWordRefNgramCountRefForWordNgram [
 
 	| candidate reference result |
 	candidate := llmChRF getWordNgramCounts: 'INTEGER FUNCTION SUM(a, b)'.

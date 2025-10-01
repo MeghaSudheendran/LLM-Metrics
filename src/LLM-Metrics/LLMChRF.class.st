@@ -4,17 +4,74 @@ Class {
 	#instVars : [
 		'maxWordOrder',
 		'maxCharOrder',
-		'beta',
-		'candidate_result'
+		'beta'
 	],
 	#category : 'LLM-Metrics',
 	#package : 'LLM-Metrics'
 }
 
 { #category : 'as yet unclassified' }
+LLMChRF >> accumulateDict: targetDict with: sourceDict [
+    sourceDict keysAndValuesDo: [ :key :value |
+        targetDict at: key put: (targetDict at: key ifAbsent: [0]) + value ]
+]
+
+{ #category : 'as yet unclassified' }
+LLMChRF >> accumulateDocumentStats: docStats withBestMatch: bestMatch [
+
+	self
+		accumulateDict: (docStats at: #wordMatching)
+		with: (bestMatch at: #wordMatching).
+	self
+		accumulateDict: (docStats at: #wordRef)
+		with: (bestMatch at: #wordRef).
+	self
+		accumulateDict: (docStats at: #wordCand)
+		with: (bestMatch at: #wordCand).
+
+	self
+		accumulateDict: (docStats at: #chrMatching)
+		with: (bestMatch at: #chrMatching).
+	self
+		accumulateDict: (docStats at: #chrRef)
+		with: (bestMatch at: #chrRef).
+	self
+		accumulateDict: (docStats at: #chrCand)
+		with: (bestMatch at: #chrCand)
+]
+
+{ #category : 'accessing' }
+LLMChRF >> beta [
+
+	^ beta
+]
+
+{ #category : 'accessing' }
+LLMChRF >> beta: anObject [
+
+	beta := anObject
+]
+
+{ #category : 'as yet unclassified' }
 LLMChRF >> calculateChRF [
 
-	| doc_totalWordMatchingCount doc_totalWordRefCount doc_totalWordCandCount doc_totalChrMatchingCount doc_totalChrRefCount doc_totalChrCandCount totalWordNgramFScore totalwordNgramPrecision totalwordNgramRecall totalCharacterNgramFScore totalCharacterNgramPrecision totalCharacterNgramRecall totalFScore totalPrecision totalRecall |
+	| docStats |
+	docStats := self initializeDocumentStats.
+
+	candidateSets do: [ :item |
+			| candidate references bestMatch |
+			candidate := item candidateSourcecode.
+			references := item referencesSourcecode.
+
+			bestMatch := self
+				             findBestReferenceMatchForCandidate: candidate
+				             againstReferences: references.
+
+			self accumulateDocumentStats: docStats withBestMatch: bestMatch ].
+
+	^ self computeFinalScoresFrom: docStats
+
+	"| doc_totalWordMatchingCount doc_totalWordRefCount doc_totalWordCandCount doc_totalChrMatchingCount doc_totalChrRefCount doc_totalChrCandCount totalWordNgramFScore totalwordNgramPrecision totalwordNgramRecall totalCharacterNgramFScore totalCharacterNgramPrecision totalCharacterNgramRecall totalFScore totalPrecision totalRecall |
 	candidateSets do: [ :item |
 			| candidate references maxF wordNgramCount_candidate charNgramCount_candidate wordNgramCount_reference charNgramCount_reference bestWordMatchingCount bestWordRefCount bestWordCandCount bestChrMatchingCount bestChrRefCount bestChrCandCount |
 			bestWordMatchingCount := Dictionary new.
@@ -64,7 +121,7 @@ LLMChRF >> calculateChRF [
 						                          ref: charNgramCount_reference.
 
 
-					" will return wordNgramF, wordNgramRec, wordNgramPrec"
+					"" will return wordNgramF, wordNgramRec, wordNgramPrec""
 
 					wordNgramFScore := self
 						                   calculateNgramFscore: matchingWordNgramCounts
@@ -112,7 +169,7 @@ LLMChRF >> calculateChRF [
 							bestChrCandCount := totalChrCandNgramCount ] ].
 
 
-			"collect document level ngram counts"
+			""collect document level ngram counts""
 
 			doc_totalWordMatchingCount := self
 				                              collectDocumentLevelTotalWordMatchingCountWith:
@@ -171,30 +228,28 @@ LLMChRF >> calculateChRF [
 	                  / (maxWordOrder + maxCharOrder).
 	totalRecall := totalwordNgramRecall values sum
 	               + totalCharacterNgramRecall values sum
-	               / (maxWordOrder + maxCharOrder)
+	               / (maxWordOrder + maxCharOrder)"
 ]
 
 { #category : 'as yet unclassified' }
 LLMChRF >> calculateNgramFscore: matching totalRef: totalRef totalCand: totalCand [
 
-	| ngramF factor |
+	| ngramF factor numerator |
 	ngramF := Dictionary new.
 	factor := beta squared. "beta**2"
 
 	matching keysAndValuesDo: [ :order :matchCount |
 			| prec rec denom |
-			prec := (totalCand at: order ifAbsent: [ 0 ]) > 0
-				        ifTrue: [ matchCount / (totalCand at: order) ]
-				        ifFalse: [ 1e-16 ].
+			prec := (totalCand at: order ifAbsent: [ 0 ]) > 0 ifTrue: [
+				        matchCount / (totalCand at: order) ].
 
-			rec := (totalRef at: order ifAbsent: [ 0 ]) > 0
-				       ifTrue: [ matchCount / (totalRef at: order) ]
-				       ifFalse: [ 1e-16 ].
+			rec := (totalRef at: order ifAbsent: [ 0 ]) > 0 ifTrue: [
+				       matchCount / (totalRef at: order) ].
 
 			denom := factor * prec + rec.
-
+			numerator := (1 + factor) * prec * rec.
 			ngramF at: order put: (denom > 0
-					 ifTrue: [ 1 + factor * prec * rec / denom ]
+					 ifTrue: [ numerator / denom ]
 					 ifFalse: [ 1e-16 ]) ].
 
 	^ ngramF
@@ -205,20 +260,12 @@ LLMChRF >> calculateNgramPrecision: matching totalRef: totalRef totalCand: total
 
 	| ngramPrec factor |
 	ngramPrec := Dictionary new.
-	factor := beta squared. "beta**2"
+	factor := beta squared. 
 
 	matching keysAndValuesDo: [ :order :matchCount |
-			| prec rec denom |
+			| prec |
 			prec := (totalCand at: order ifAbsent: [ 0 ]) > 0
-				        ifTrue: [ matchCount / (totalCand at: order) ]
-				        ifFalse: [ 1e-16 ].
-
-			rec := (totalRef at: order ifAbsent: [ 0 ]) > 0
-				       ifTrue: [ matchCount / (totalRef at: order) ]
-				       ifFalse: [ 1e-16 ].
-
-			denom := factor * prec + rec.
-
+				        ifTrue: [ matchCount / (totalCand at: order) ].
 			ngramPrec at: order put: prec ].
 
 	^ ngramPrec
@@ -229,26 +276,20 @@ LLMChRF >> calculateNgramRecall: matching totalRef: totalRef totalCand: totalCan
 
 	| ngramRec factor |
 	ngramRec := Dictionary new.
-	factor := beta squared. "beta**2"
+	factor := beta squared. 
 
 	matching keysAndValuesDo: [ :order :matchCount |
-			| prec rec denom |
-			prec := (totalCand at: order ifAbsent: [ 0 ]) > 0
-				        ifTrue: [ matchCount / (totalCand at: order) ]
-				        ifFalse: [ 1e-16 ].
-
+			| rec |
+			
 			rec := (totalRef at: order ifAbsent: [ 0 ]) > 0
-				       ifTrue: [ matchCount / (totalRef at: order) ]
-				       ifFalse: [ 1e-16 ].
-
-			denom := factor * prec + rec.
-
+				       ifTrue: [ matchCount / (totalRef at: order) ].
+				
 			ngramRec at: order put: rec ].
 
 	^ ngramRec
 ]
 
-{ #category : 'document-level' }
+{ #category : 'unused' }
 LLMChRF >> collectDocumentLevelCharCandCountWith: bestChrCandCount [
     | totalChrCandCount |
     totalChrCandCount := Dictionary new.
@@ -262,7 +303,7 @@ LLMChRF >> collectDocumentLevelCharCandCountWith: bestChrCandCount [
 
 ]
 
-{ #category : 'document-level' }
+{ #category : 'unused' }
 LLMChRF >> collectDocumentLevelCharMatchingCountWith: bestChrMatchingCount [
     | totalChrMatchingCount |
     totalChrMatchingCount := Dictionary new.
@@ -276,7 +317,7 @@ LLMChRF >> collectDocumentLevelCharMatchingCountWith: bestChrMatchingCount [
 
 ]
 
-{ #category : 'document-level' }
+{ #category : 'unused' }
 LLMChRF >> collectDocumentLevelCharRefCountWith: bestChrRefCount [
     | totalChrRefCount |
     totalChrRefCount := Dictionary new.
@@ -290,7 +331,7 @@ LLMChRF >> collectDocumentLevelCharRefCountWith: bestChrRefCount [
 
 ]
 
-{ #category : 'document-level' }
+{ #category : 'unused' }
 LLMChRF >> collectDocumentLevelTotalWordCandCountWith: bestWordCandCount [
     | totalWordCandCount |
     totalWordCandCount := Dictionary new.
@@ -304,7 +345,7 @@ LLMChRF >> collectDocumentLevelTotalWordCandCountWith: bestWordCandCount [
 
 ]
 
-{ #category : 'document-level' }
+{ #category : 'unused' }
 LLMChRF >> collectDocumentLevelTotalWordMatchingCountWith: bestWordMatchingCount [
     | totalWordMatchingCount |
     totalWordMatchingCount := Dictionary new.
@@ -318,7 +359,7 @@ LLMChRF >> collectDocumentLevelTotalWordMatchingCountWith: bestWordMatchingCount
 
 ]
 
-{ #category : 'document-level' }
+{ #category : 'unused' }
 LLMChRF >> collectDocumentLevelTotalWordRefCountWith: bestWordRefCount [
     | totalWordRefCount |
     totalWordRefCount := Dictionary new.
@@ -330,6 +371,68 @@ LLMChRF >> collectDocumentLevelTotalWordRefCountWith: bestWordRefCount [
     ].
     ^ totalWordRefCount
 
+]
+
+{ #category : 'as yet unclassified' }
+LLMChRF >> computeFinalScoresFrom: docStats [
+    | wordF wordP wordR chrF chrP chrR totalF totalP totalR |
+
+    wordF := self calculateNgramFscore: (docStats at: #wordMatching)
+                    totalRef: (docStats at: #wordRef)
+                    totalCand: (docStats at: #wordCand).
+    wordP := self calculateNgramPrecision: (docStats at: #wordMatching)
+                    totalRef: (docStats at: #wordRef)
+                    totalCand: (docStats at: #wordCand).
+    wordR := self calculateNgramRecall: (docStats at: #wordMatching)
+                    totalRef: (docStats at: #wordRef)
+                    totalCand: (docStats at: #wordCand).
+
+    chrF := self calculateNgramFscore: (docStats at: #chrMatching)
+                   totalRef: (docStats at: #chrRef)
+                   totalCand: (docStats at: #chrCand).
+    chrP := self calculateNgramPrecision: (docStats at: #chrMatching)
+                   totalRef: (docStats at: #chrRef)
+                   totalCand: (docStats at: #chrCand).
+    chrR := self calculateNgramRecall: (docStats at: #chrMatching)
+                   totalRef: (docStats at: #chrRef)
+                   totalCand: (docStats at: #chrCand).
+
+    totalF := (wordF values sum + chrF values sum) / (maxWordOrder + maxCharOrder).
+    totalP := (wordP values sum + chrP values sum) / (maxWordOrder + maxCharOrder).
+    totalR := (wordR values sum + chrR values sum) / (maxWordOrder + maxCharOrder).
+
+    ^ Dictionary new
+        at: #totalFScore put: totalF;
+        at: #totalPrecision put: totalP;
+        at: #totalRecall put: totalR;
+        at: #wordFScores put: wordF;
+        at: #charFScores put: chrF;
+        yourself
+]
+
+{ #category : 'as yet unclassified' }
+LLMChRF >> findBestReferenceMatchForCandidate: candidate againstReferences: references [
+
+	| wordNgramCount_candidate charNgramCount_candidate bestScore bestMatch |
+	wordNgramCount_candidate := self getWordNgramCounts: candidate.
+	charNgramCount_candidate := self getCharacterNgramCounts: candidate.
+
+	bestScore := Float infinity negated. "Start low; we maximize"
+	bestMatch := nil.
+
+	references do: [ :reference |
+			| match |
+			match := self
+				         scoreCandidate: candidate
+				         wordNgrams: wordNgramCount_candidate
+				         charNgrams: charNgramCount_candidate
+				         againstReference: reference.
+
+			(match at: #sentF) > bestScore ifTrue: [
+					bestScore := match at: #sentF.
+					bestMatch := match ] ].
+
+	^ bestMatch
 ]
 
 { #category : 'character-level' }
@@ -396,6 +499,19 @@ LLMChRF >> initialize [
 	maxCharOrder := 4
 ]
 
+{ #category : 'initialization' }
+LLMChRF >> initializeDocumentStats [
+
+	^ Dictionary new
+		  at: #wordMatching put: Dictionary new;
+		  at: #wordRef put: Dictionary new;
+		  at: #wordCand put: Dictionary new;
+		  at: #chrMatching put: Dictionary new;
+		  at: #chrRef put: Dictionary new;
+		  at: #chrCand put: Dictionary new;
+		  yourself
+]
+
 { #category : 'as yet unclassified' }
 LLMChRF >> matchCountsForCandidate: candidate ref: reference [
 "dictionary with {order:matchcount } {1:3 2:1 3:0 4:0 }"
@@ -419,6 +535,30 @@ LLMChRF >> matchCountsForCandidate: candidate ref: reference [
 	^ matching
 ]
 
+{ #category : 'accessing' }
+LLMChRF >> maxCharOrder [
+
+	^ maxCharOrder
+]
+
+{ #category : 'accessing' }
+LLMChRF >> maxCharOrder: anObject [
+
+	maxCharOrder := anObject
+]
+
+{ #category : 'accessing' }
+LLMChRF >> maxWordOrder [
+
+	^ maxWordOrder
+]
+
+{ #category : 'accessing' }
+LLMChRF >> maxWordOrder: anObject [
+
+	maxWordOrder := anObject
+]
+
 { #category : 'as yet unclassified' }
 LLMChRF >> ngramsOfOrder: n fromTokens: tokens [
 
@@ -434,7 +574,74 @@ LLMChRF >> ngramsOfOrder: n fromTokens: tokens [
     ^ counts
 ]
 
-{ #category : 'accessing' }
+{ #category : 'as yet unclassified' }
+LLMChRF >> scoreCandidate: candidate wordNgrams: wordNgramCount_candidate charNgrams: charNgramCount_candidate againstReference: reference [
+
+	| wordNgramCount_reference charNgramCount_reference matchingWord totalWordRef totalWordCand matchingChr totalChrRef totalChrCand wordF wordP wordR chrF chrP chrR sentF |
+	wordNgramCount_reference := self getWordNgramCounts: reference.
+	charNgramCount_reference := self getCharacterNgramCounts: reference.
+
+	matchingWord := self
+		                matchCountsForCandidate: wordNgramCount_candidate
+		                ref: wordNgramCount_reference.
+	totalWordRef := self
+		                totalWordRefNgramCount: wordNgramCount_candidate
+		                ref: wordNgramCount_reference.
+	totalWordCand := self
+		                 totalWordCandNgramCount: wordNgramCount_candidate
+		                 ref: wordNgramCount_reference.
+
+	matchingChr := self
+		               matchCountsForCandidate: charNgramCount_candidate
+		               ref: charNgramCount_reference.
+	totalChrRef := self
+		               totalWordRefNgramCount: charNgramCount_candidate
+		               ref: charNgramCount_reference. "⚠️ Note: method name may be misleading"
+	totalChrCand := self
+		                totalWordCandNgramCount: charNgramCount_candidate
+		                ref: charNgramCount_reference.
+
+	wordF := self
+		         calculateNgramFscore: matchingWord
+		         totalRef: totalWordRef
+		         totalCand: totalWordCand.
+	wordP := self
+		         calculateNgramPrecision: matchingWord
+		         totalRef: totalWordRef
+		         totalCand: totalWordCand.
+	wordR := self
+		         calculateNgramRecall: matchingWord
+		         totalRef: totalWordRef
+		         totalCand: totalWordCand.
+
+	chrF := self
+		        calculateNgramFscore: matchingChr
+		        totalRef: totalChrRef
+		        totalCand: totalChrCand.
+	chrP := self
+		        calculateNgramPrecision: matchingChr
+		        totalRef: totalChrRef
+		        totalCand: totalChrCand.
+	chrR := self
+		        calculateNgramRecall: matchingChr
+		        totalRef: totalChrRef
+		        totalCand: totalChrCand.
+
+	sentF := wordF values sum + chrF values sum
+	         / (maxWordOrder + maxCharOrder).
+
+	^ Dictionary new
+		  at: #sentF put: sentF;
+		  at: #wordMatching put: matchingWord;
+		  at: #wordRef put: totalWordRef;
+		  at: #wordCand put: totalWordCand;
+		  at: #chrMatching put: matchingChr;
+		  at: #chrRef put: totalChrRef;
+		  at: #chrCand put: totalChrCand;
+		  yourself
+]
+
+{ #category : 'unused' }
 LLMChRF >> totalCountsFor: ngramsPerOrder [
 	^ ngramsPerOrder collect: [ :ngrams | ngrams size ]
 ]
