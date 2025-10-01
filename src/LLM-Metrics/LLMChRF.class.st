@@ -55,7 +55,7 @@ LLMChRF >> beta: anObject [
 { #category : 'as yet unclassified' }
 LLMChRF >> calculateChRF [
 
-	| docStats |
+	| docStats finalScores |
 	docStats := self initializeDocumentStats.
 
 	candidateSets do: [ :item |
@@ -68,8 +68,8 @@ LLMChRF >> calculateChRF [
 				             againstReferences: references.
 
 			self accumulateDocumentStats: docStats withBestMatch: bestMatch ].
-
-	^ self computeFinalScoresFrom: docStats
+	finalScores := self computeFinalScoresFrom: docStats.
+	^ finalScores at: 'totalFScore'
 ]
 
 { #category : 'as yet unclassified' }
@@ -395,6 +395,14 @@ LLMChRF >> collectDocumentLevelTotalWordRefCountWith: bestWordRefCount [
 
 { #category : 'as yet unclassified' }
 LLMChRF >> computeFinalScoresFrom: docStats [
+
+"docStats contains the best ngram values.
+
+It will be used to find Fscore, precision and Recall in the order of Ngram order.
+
+finally all the scores will be used to calculate the overall chrf score
+
+"
     | wordF wordP wordR chrF chrP chrR totalF totalP totalR |
 
     wordF := self calculateNgramFscore: (docStats at: #wordMatching)
@@ -521,7 +529,7 @@ LLMChRF >> initialize [
 
 { #category : 'initialization' }
 LLMChRF >> initializeDocumentStats [
-
+"To accumulate the best ngram values(matching, candidate and ref) to finally calculate overal score."
 	^ Dictionary new
 		  at: #wordMatching put: Dictionary new;
 		  at: #wordRef put: Dictionary new;

@@ -24,7 +24,7 @@ LLMChRFTest >> setUp [
 { #category : 'tests' }
 LLMChRFTest >> testCalculateChRF [
 
-	| listOfcandidates listOfreferences chrf |
+	| listOfcandidates listOfreferences chrfFScore |
 	listOfcandidates := OrderedCollection with:
 		                    'INTEGER FUNCTION SUM(a, b)'.
 	listOfreferences := OrderedCollection with: (OrderedCollection
@@ -32,9 +32,10 @@ LLMChRFTest >> testCalculateChRF [
 			                     with: 'INTEGER FUNCTION SUM(a, d)').
 
 	llmChRF initDatasetWith: listOfcandidates and: listOfreferences.
-	chrf := llmChRF calculateChRF.
 
-	self assert: chrf equals: 0
+	chrfFScore := llmChRF calculateChRF.
+
+	self assert: chrfFScore closeTo: 0.6983 precision: 4
 ]
 
 { #category : 'tests' }
