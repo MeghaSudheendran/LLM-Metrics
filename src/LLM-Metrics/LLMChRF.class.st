@@ -70,6 +70,26 @@ LLMChRF >> calculateChRF [
 			self accumulateDocumentStats: docStats withBestMatch: bestMatch ].
 
 	^ self computeFinalScoresFrom: docStats
+]
+
+{ #category : 'as yet unclassified' }
+LLMChRF >> calculateChRF_Unused [
+
+	| docStats |
+	docStats := self initializeDocumentStats.
+
+	candidateSets do: [ :item |
+			| candidate references bestMatch |
+			candidate := item candidateSourcecode.
+			references := item referencesSourcecode.
+
+			bestMatch := self
+				             findBestReferenceMatchForCandidate: candidate
+				             againstReferences: references.
+
+			self accumulateDocumentStats: docStats withBestMatch: bestMatch ].
+
+	^ self computeFinalScoresFrom: docStats
 
 	"| doc_totalWordMatchingCount doc_totalWordRefCount doc_totalWordCandCount doc_totalChrMatchingCount doc_totalChrRefCount doc_totalChrCandCount totalWordNgramFScore totalwordNgramPrecision totalwordNgramRecall totalCharacterNgramFScore totalCharacterNgramPrecision totalCharacterNgramRecall totalFScore totalPrecision totalRecall |
 	candidateSets do: [ :item |
@@ -417,7 +437,7 @@ LLMChRF >> findBestReferenceMatchForCandidate: candidate againstReferences: refe
 	wordNgramCount_candidate := self getWordNgramCounts: candidate.
 	charNgramCount_candidate := self getCharacterNgramCounts: candidate.
 
-	bestScore := Float infinity negated. "Start low; we maximize"
+	bestScore := Float infinity negated. 
 	bestMatch := nil.
 
 	references do: [ :reference |
@@ -585,20 +605,20 @@ LLMChRF >> scoreCandidate: candidate wordNgrams: wordNgramCount_candidate charNg
 		                matchCountsForCandidate: wordNgramCount_candidate
 		                ref: wordNgramCount_reference.
 	totalWordRef := self
-		                totalWordRefNgramCount: wordNgramCount_candidate
+		                totalRefNgramCount: wordNgramCount_candidate
 		                ref: wordNgramCount_reference.
 	totalWordCand := self
-		                 totalWordCandNgramCount: wordNgramCount_candidate
+		                 totalCandNgramCount: wordNgramCount_candidate
 		                 ref: wordNgramCount_reference.
 
 	matchingChr := self
 		               matchCountsForCandidate: charNgramCount_candidate
 		               ref: charNgramCount_reference.
 	totalChrRef := self
-		               totalWordRefNgramCount: charNgramCount_candidate
+		               totalRefNgramCount: charNgramCount_candidate
 		               ref: charNgramCount_reference. "⚠️ Note: method name may be misleading"
 	totalChrCand := self
-		                totalWordCandNgramCount: charNgramCount_candidate
+		                totalCandNgramCount: charNgramCount_candidate
 		                ref: charNgramCount_reference.
 
 	wordF := self
@@ -641,13 +661,8 @@ LLMChRF >> scoreCandidate: candidate wordNgrams: wordNgramCount_candidate charNg
 		  yourself
 ]
 
-{ #category : 'unused' }
-LLMChRF >> totalCountsFor: ngramsPerOrder [
-	^ ngramsPerOrder collect: [ :ngrams | ngrams size ]
-]
-
-{ #category : 'word-level' }
-LLMChRF >> totalWordCandNgramCount: candidate ref: reference [
+{ #category : 'calculating' }
+LLMChRF >> totalCandNgramCount: candidate ref: reference [
 "Can be used with wordNgrams as well as Charater Ngrams- two kinds of tests provided"
 	| totalCand |
 	totalCand := Dictionary new.
@@ -663,8 +678,13 @@ LLMChRF >> totalWordCandNgramCount: candidate ref: reference [
 	^ totalCand
 ]
 
-{ #category : 'word-level' }
-LLMChRF >> totalWordRefNgramCount: candidate ref: reference [
+{ #category : 'unused' }
+LLMChRF >> totalCountsFor: ngramsPerOrder [
+	^ ngramsPerOrder collect: [ :ngrams | ngrams size ]
+]
+
+{ #category : 'calculating' }
+LLMChRF >> totalRefNgramCount: candidate ref: reference [
 "Can be used with wordNgrams as well as Charater Ngrams- two kinds of tests provided"
 	| totalRef |
 	totalRef := Dictionary new.
