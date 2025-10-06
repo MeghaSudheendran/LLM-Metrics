@@ -18,7 +18,7 @@ LLMChRFTest >> setUp [
 	llmChRF beta: 2.
 	llmChRF maxCharOrder: 4.
 	llmChRF maxWordOrder: 4
-	"Put here a common initialization logic for tests"
+	
 ]
 
 { #category : 'tests' }
@@ -164,28 +164,31 @@ LLMChRFTest >> testGetCharacterNgramCounts [
 LLMChRFTest >> testGetWordNgramCounts [
 
 	| aString result |
-	aString := 'INTEGER FUNCTION SIMPLEFUNCTION(a, b)'.
+	aString := 'INTEGER FUNCTION SIMPLEFUNCTION(a, b).'.
 	result := Set new.
 	result := llmChRF getWordNgramCounts: aString.
 
 	self assert: result size equals: 4.
 
-
 	self
 		assert: (result at: 1) keys
-		equals: #('b)' 'FUNCTION' 'SIMPLEFUNCTION(a,' 'INTEGER')
-		.
+		equals: #( 'FUNCTION' 'SIMPLEFUNCTION(a' 'INTEGER' ',' '.' 'b)' ).
 	self
 		assert: (result at: 2) keys
-		equals:
-			#('FUNCTION SIMPLEFUNCTION(a,' 'SIMPLEFUNCTION(a, b)' 'INTEGER FUNCTION').
+		equals: #( 'FUNCTION SIMPLEFUNCTION(a' ', b)' 'INTEGER FUNCTION'
+			   'b) .' 'SIMPLEFUNCTION(a ,' ).
+
 	self
 		assert: (result at: 3) keys
-		equals: #('FUNCTION SIMPLEFUNCTION(a, b)' 'INTEGER FUNCTION SIMPLEFUNCTION(a,').
+		equals:
+			#( 'SIMPLEFUNCTION(a , b)' ', b) .' 'INTEGER FUNCTION SIMPLEFUNCTION(a'
+			   'FUNCTION SIMPLEFUNCTION(a ,' ).
+
 	self
 		assert: (result at: 4) keys
-		equals:
-		#('INTEGER FUNCTION SIMPLEFUNCTION(a, b)')
+		equals: #( 'INTEGER FUNCTION SIMPLEFUNCTION(a ,'
+			   'FUNCTION SIMPLEFUNCTION(a , b)'
+			   'SIMPLEFUNCTION(a , b) .' )
 ]
 
 { #category : 'tests' }
@@ -217,9 +220,9 @@ LLMChRFTest >> testMatchCountsForCandidateRefForWordNgram [
 
 	result := llmChRF matchCountsForCandidate: candidate ref: reference.
 
-	self assert: (result at: 1) equals: 3.
-	self assert: (result at: 2) equals: 1.
-	self assert: (result at: 3) equals: 0.
+	self assert: (result at: 1) equals: 5.
+	self assert: (result at: 2) equals: 3.
+	self assert: (result at: 3) equals: 1.
 	self assert: (result at: 4) equals: 0
 ]
 
@@ -399,10 +402,10 @@ LLMChRFTest >> testTotalCandNgramCountRefForWordNgram [
 
 	result := llmChRF totalCandNgramCount: candidate ref: reference.
 
-	self assert: (result at: 1) equals: 4.
-	self assert: (result at: 2) equals: 3.
-	self assert: (result at: 3) equals: 2.
-	self assert: (result at: 4) equals: 1
+	self assert: (result at: 1) equals: 6.
+	self assert: (result at: 2) equals: 5.
+	self assert: (result at: 3) equals: 4.
+	self assert: (result at: 4) equals: 3
 ]
 
 { #category : 'tests' }
@@ -432,8 +435,8 @@ LLMChRFTest >> testTotalRefNgramCountRefForWordNgram [
 
 	result := llmChRF totalRefNgramCount: candidate ref: reference.
 
-	self assert: (result at: 1) equals: 4.
-	self assert: (result at: 2) equals: 3.
-	self assert: (result at: 3) equals: 2.
-	self assert: (result at: 4) equals: 1
+	self assert: (result at: 1) equals: 6.
+	self assert: (result at: 2) equals: 5.
+	self assert: (result at: 3) equals: 4.
+	self assert: (result at: 4) equals: 3
 ]

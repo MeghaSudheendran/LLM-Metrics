@@ -75,22 +75,6 @@ LLMChRF >> calculateChRF [
 { #category : 'as yet unclassified' }
 LLMChRF >> calculateChRF_Unused [
 
-	| docStats |
-	docStats := self initializeDocumentStats.
-
-	candidateSets do: [ :item |
-			| candidate references bestMatch |
-			candidate := item candidateSourcecode.
-			references := item referencesSourcecode.
-
-			bestMatch := self
-				             findBestReferenceMatchForCandidate: candidate
-				             againstReferences: references.
-
-			self accumulateDocumentStats: docStats withBestMatch: bestMatch ].
-
-	^ self computeFinalScoresFrom: docStats
-
 	"| doc_totalWordMatchingCount doc_totalWordRefCount doc_totalWordCandCount doc_totalChrMatchingCount doc_totalChrRefCount doc_totalChrCandCount totalWordNgramFScore totalwordNgramPrecision totalwordNgramRecall totalCharacterNgramFScore totalCharacterNgramPrecision totalCharacterNgramRecall totalFScore totalPrecision totalRecall |
 	candidateSets do: [ :item |
 			| candidate references maxF wordNgramCount_candidate charNgramCount_candidate wordNgramCount_reference charNgramCount_reference bestWordMatchingCount bestWordRefCount bestWordCandCount bestChrMatchingCount bestChrRefCount bestChrCandCount |
@@ -260,14 +244,16 @@ LLMChRF >> calculateNgramFscore: matching totalRef: totalRef totalCand: totalCan
 
 	matching keysAndValuesDo: [ :order :matchCount |
 			| prec rec denom |
-			prec := (totalCand at: order ifAbsent: [ 0 ]) > 0 ifTrue: [
-				        matchCount / (totalCand at: order) ].
+			prec := (totalCand at: order ifAbsent: [ 0 ]) > 0
+				        ifTrue: [ matchCount / (totalCand at: order) ]
+				        ifFalse: [ 1e-16 ].
 
-			rec := (totalRef at: order ifAbsent: [ 0 ]) > 0 ifTrue: [
-				       matchCount / (totalRef at: order) ].
-
+			rec := (totalRef at: order ifAbsent: [ 0 ]) > 0
+				       ifTrue: [ matchCount / (totalRef at: order) ]
+				       ifFalse: [ 1e-16 ].
+			
 			denom := factor * prec + rec.
-			numerator := (1 + factor) * prec * rec.
+			numerator := 1 + factor * prec * rec.
 			ngramF at: order put: (denom > 0
 					 ifTrue: [ numerator / denom ]
 					 ifFalse: [ 1e-16 ]) ].
@@ -280,12 +266,13 @@ LLMChRF >> calculateNgramPrecision: matching totalRef: totalRef totalCand: total
 
 	| ngramPrec factor |
 	ngramPrec := Dictionary new.
-	factor := beta squared. 
+	factor := beta squared.
 
 	matching keysAndValuesDo: [ :order :matchCount |
 			| prec |
 			prec := (totalCand at: order ifAbsent: [ 0 ]) > 0
-				        ifTrue: [ matchCount / (totalCand at: order) ].
+				        ifTrue: [ matchCount / (totalCand at: order) ]
+				        ifFalse: [ 1e-16 ].
 			ngramPrec at: order put: prec ].
 
 	^ ngramPrec
@@ -296,14 +283,14 @@ LLMChRF >> calculateNgramRecall: matching totalRef: totalRef totalCand: totalCan
 
 	| ngramRec factor |
 	ngramRec := Dictionary new.
-	factor := beta squared. 
+	factor := beta squared.
 
 	matching keysAndValuesDo: [ :order :matchCount |
 			| rec |
-			
 			rec := (totalRef at: order ifAbsent: [ 0 ]) > 0
-				       ifTrue: [ matchCount / (totalRef at: order) ].
-				
+				       ifTrue: [ matchCount / (totalRef at: order) ]
+				       ifFalse: [ 1e-16 ].
+
 			ngramRec at: order put: rec ].
 
 	^ ngramRec
@@ -387,6 +374,7 @@ LLMChRF >> getCharacterNgramCounts: aString [
 }"
 
 	| cleanString result |
+
 	cleanString := aString copyWithoutAll: ' '.
 	result := Dictionary new.
 	1 to: maxCharOrder do: [ :n |
@@ -412,7 +400,8 @@ LLMChRF >> getWordNgramCounts: aString [
 }"
 
 	| tokens finalDict |
-	tokens := aString splitOn: Character space.
+	
+	tokens := self separatePunctuation: aString.
 	finalDict := Dictionary new.
 
 	1 to: maxWordOrder do: [ :n |
@@ -432,15 +421,18 @@ LLMChRF >> initDatasetWith: listOfcandidates and: listOfreferences [
 				llmCandidateSet candidateSourcecode: candidate.
 				llmCandidateSet referencesSourcecode: references.
 
-				self candidateSets add: llmCandidateSet.]
+				self candidateSets add: llmCandidateSet.].
+		
+			
 ]
 
 { #category : 'initialization' }
 LLMChRF >> initialize [
 
 	super initialize.
-	maxWordOrder := 4.
-	maxCharOrder := 4
+	maxWordOrder := 2.
+	maxCharOrder := 6.
+	beta := 2.
 ]
 
 { #category : 'initialization' }
@@ -454,6 +446,12 @@ LLMChRF >> initializeDocumentStats [
 		  at: #chrRef put: Dictionary new;
 		  at: #chrCand put: Dictionary new;
 		  yourself
+]
+
+{ #category : 'character-level' }
+LLMChRF >> isPunctuation: aChar [
+    "Answer whether the receiver is a common punctuation character."
+    ^ '.,;:!?()[]{}"''-_' includes: aChar
 ]
 
 { #category : 'as yet unclassified' }
@@ -583,6 +581,40 @@ LLMChRF >> scoreCandidate: candidate wordNgrams: wordNgramCount_candidate charNg
 		  at: #chrRef put: totalChrRef;
 		  at: #chrCand put: totalChrCand;
 		  yourself
+]
+
+{ #category : 'character-level' }
+LLMChRF >> separatePunctuation: aString [
+    "Split punctuation at start or end of words into separate tokens."
+    | words tokens |
+    words := aString trimBoth splitOn: ' '.
+    tokens := OrderedCollection new.
+    
+    words do: [ :word |
+        word ifNotEmpty: [
+            | first last |
+            first := word first.
+            last := word last.
+            
+            (word size = 1) ifTrue: [
+                tokens add: word
+            ] ifFalse: [
+
+                .( self isPunctuation: last) ifTrue: [
+                    tokens add: (word copyFrom: 1 to: word size - 1).
+                    tokens add: (String with: last)
+                ] ifFalse: [
+                    (self isPunctuation: first) ifTrue: [
+                        tokens add: (String with: first).
+                        tokens add: (word copyFrom: 2 to: word size)
+                    ] ifFalse: [
+                        tokens add: word
+                    ]
+                ]
+            ]
+        ]
+    ].
+    ^ tokens
 ]
 
 { #category : 'calculating' }

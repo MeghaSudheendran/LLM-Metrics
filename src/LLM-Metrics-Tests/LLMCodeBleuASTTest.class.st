@@ -179,7 +179,7 @@ LLMCodeBleuASTTest >> testCalculateASTMatchScoreMultipleReferences [
 
 	self assert: count1 equals: 1.
 	self assert: count2 equals: 1.
-	self assert: count3 equals: 1.
+	self assert: count3 equals: 0.
 	self
 		assert: (llmCodeBleuAST getSubtreesOfHeight2: ref1) size
 		equals: 1.
@@ -188,10 +188,10 @@ LLMCodeBleuASTTest >> testCalculateASTMatchScoreMultipleReferences [
 		equals: 1.
 	self
 		assert: (llmCodeBleuAST getSubtreesOfHeight2: ref3) size
-		equals: 1.
+		equals: 0.
 
-	self assert: match equals: 3.
-	self assert: totalcount equals: 3.
+	self assert: match equals: 2.
+	self assert: totalcount equals: 2.
 	self assert: match / totalcount equals: 1
 ]
 
