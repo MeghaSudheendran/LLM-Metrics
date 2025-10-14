@@ -1,5 +1,22 @@
 "
+LLMChRFTestBasedOnPaperImplemetation
+                                                                                                    
+Description
 A LLMChRFTest is a test class for testing the behavior of LLMChRF
+
+The following tests were based on the WMT12 translation task dataset and evaluation setting (as referenced in Popović’s paper).
+
+Tests
+This test suite defines 8 test methods:
+
+•	LLMChRFTestBasedOnPaperImplemetation>>#testCalculateChRF_6
+•	LLMChRFTestBasedOnPaperImplemetation>>#testCalculateChRF_4
+•	LLMChRFTestBasedOnPaperImplemetation>>#testCalculateChRF_2
+•	LLMChRFTestBasedOnPaperImplemetation>>#testCalculateChRF_5
+•	LLMChRFTestBasedOnPaperImplemetation>>#testCalculateChRF_8
+•	LLMChRFTestBasedOnPaperImplemetation>>#testCalculateChRF_3
+•	LLMChRFTestBasedOnPaperImplemetation>>#testCalculateChRF_1
+•	LLMChRFTestBasedOnPaperImplemetation>>#testCalculateChRF_7
 "
 Class {
 	#name : 'LLMChRFTestBasedOnPaperImplemetation',

@@ -1,5 +1,19 @@
 "
-A LLMCodeBleuASTTest is a test class for testing the behavior of LLMCodeBleuAST
+A LLMCodeBleuASTTest is a test class for testing the behavior of LLMCodeBleuAST.
+
+This test suite validates the correctness, robustness, and consistency of the LLMCodeBleuAST metric implementation.
+The tests inside LLMCodeBleuASTTest were designed and asserted using the WMT12 translation task dataset and evaluation setting
+(as referenced in Popović’s 2015 paper on chrF).
+
+Reference:
+Popović, M. (2015). 'chrF: character n-gram F-score for automatic MT evaluation.'
+In Proceedings of the Tenth Workshop on Statistical Machine Translation (WMT15).
+https://www.researchgate.net/publication/281677746_chrF_character_n-gram_F-score_for_automatic_MT_evaluation
+
+Dataset:
+https://www.statmt.org/wmt12/translation-task.html
+
+
 "
 Class {
 	#name : 'LLMCodeBleuASTTest',
