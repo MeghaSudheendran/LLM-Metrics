@@ -251,7 +251,12 @@ id,legacy_code,reference_code,mistral_translated_code,mistral_translated_score,q
 ### Process CSV File
 
 ```smalltalk
+"To update missing score"
 LLMChRFEvaluation new updateCSVFile: '/path/to/data.csv'
+
+"For calculating all the score"
+LLMChRFEvaluation new runEvaluationOn: '/path/to/data.csv'
+
 ```
 
 ### How It Works
