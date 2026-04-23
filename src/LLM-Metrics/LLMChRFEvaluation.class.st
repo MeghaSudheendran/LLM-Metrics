@@ -5,56 +5,24 @@ Class {
 	#package : 'LLM-Metrics'
 }
 
-{ #category : 'evaluation_csv' }
-LLMChRFEvaluation >> calculateMissingScoresFor: data [
-	"Calculate missing scores for mistral and qwen"
-
-	self
-		calculateScoreFor: #output_codellama_CodeLlama_7b_Instruct_hf_Score
-		candidate: (data at: #output_codellama_CodeLlama_7b_Instruct_hf)
-		reference: (data at: #Reference)
-		in: data.
-
-	self
-		calculateScoreFor: #output_codellama_CodeLlama_13b_Instruct_hf_score
-		candidate: (data at: #output_codellama_CodeLlama_13b_Instruct_hf)
-		reference: (data at: #Reference)
-		in: data.
-	self
-		calculateScoreFor: #output_mistralai_Mistral_7B_Instruct_v0_3_score
-		candidate: (data at: #output_mistralai_Mistral_7B_Instruct_v0_3)
-		reference: (data at: #Reference)
-		in: data.
-	self
-		calculateScoreFor: #output_Qwen_Qwen2_7B_Instruct_score
-		candidate: (data at: #output_Qwen_Qwen2_7B_Instruct)
-		reference: (data at: #Reference)
-		in: data.
-	self
-		calculateScoreFor: #output_Qwen_Qwen2_5_Coder_3B_score
-		candidate: (data at: #output_Qwen_Qwen2_5_Coder_3B)
-		reference: (data at: #Reference)
-		in: data.
-	self
-		calculateScoreFor: #output_Qwen_Qwen2_5_Coder_7B_Instruct_score
-		candidate: (data at: #output_Qwen_Qwen2_5_Coder_7B_Instruct)
-		reference: (data at: #Reference)
-		in: data.
-	self
-		calculateScoreFor: #output_Qwen_Qwen2_5_Coder_7B_score
-		candidate: (data at: #output_Qwen_Qwen2_5_Coder_7B)
-		reference: (data at: #Reference)
-		in: data.
-	self
-		calculateScoreFor: #output_Qwen_Qwen2_5_Coder_14B_Instruct_score
-		candidate: (data at: #output_Qwen_Qwen2_5_Coder_14B_Instruct)
-		reference: (data at: #Reference)
-		in: data.
-	self
-		calculateScoreFor: #output_Qwen_Qwen2_5_Coder_14B_score
-		candidate: (data at: #output_Qwen_Qwen2_5_Coder_14B)
-		reference: (data at: #Reference)
-		in: data
+{ #category : 'as yet unclassified' }
+LLMChRFEvaluation >> calculateMissingScoresFor: data withModelColumns: modelColumns [
+	"Calculate scores for all model columns dynamically"
+	| reference |
+	reference := data at: #Reference.
+	
+	modelColumns do: [ :modelCol |
+		| outputName scoreName candidate |
+		outputName := (modelCol at: #outputName) asSymbol.
+		scoreName := (modelCol at: #scoreName) asSymbol.
+		candidate := data at: outputName.
+		
+		self
+			calculateScoreFor: scoreName
+			candidate: candidate
+			reference: reference
+			in: data
+	]
 ]
 
 { #category : 'evaluation_csv' }
@@ -62,6 +30,7 @@ LLMChRFEvaluation >> calculateScore: candidate reference: reference [
 	"Calculate ChRF score via HTTP service."
 
 	| client response result |
+	
 	(candidate isNil or: [ candidate isEmpty ]) ifTrue: [ ^ 0.0 ].
 	(reference isNil or: [ reference isEmpty ]) ifTrue: [ ^ 0.0 ].
 
@@ -84,114 +53,128 @@ LLMChRFEvaluation >> calculateScore: candidate reference: reference [
 { #category : 'evaluation_csv' }
 LLMChRFEvaluation >> calculateScoreFor: scoreKey candidate: candidate reference: reference in: data [
 	"Calculate score if missing. "
-
+"Calculate score if missing. Leave empty if inputs are empty."
 	| currentScore |
+	
 	currentScore := data at: scoreKey.
-
-	(candidate notEmpty and: [
-		 currentScore isNil or: [ #( '' '-1.0' ) includes: currentScore ] ])
-		ifTrue: [
-				[
-					data
-						at: scoreKey
-						put:
-						(self calculateScore: candidate reference: reference) asString ]
-					on: Error
-					do: [ :ex | data at: scoreKey put: 'ERROR' ] ]
+	
+	"Only proceed if score needs calculation"
+	(currentScore isNil or: [ #( '' '-1.0' ) includes: currentScore ]) 
+		ifFalse: [ ^ self ].
+	
+	"Skip calculation if inputs are empty, leave score empty"
+	(candidate isNil or: [ candidate isEmpty ]) ifTrue: [ ^ self ].
+	(reference isNil or: [ reference isEmpty ]) ifTrue: [ ^ self ].
+	
+	"Calculate score"
+	[
+		data
+			at: scoreKey
+			put: (self calculateScore: candidate reference: reference) asString
+	] on: Error do: [ :ex | 
+		data at: scoreKey put: 'ERROR'.
+		Transcript show: 'Error for ', scoreKey asString, ': ', ex messageText; cr
+	]
 ]
 
 { #category : 'evaluation_csv' }
-LLMChRFEvaluation >> extractDataFrom: row [
-	"Extract data from row into a dictionary."
+LLMChRFEvaluation >> extractDataFrom: row withHeaders: headers [
+	"Extract data from row into a dictionary using headers"
+	| data |
+	data := Dictionary new.
+	headers withIndexDo: [ :header :index |
+		data at: header asSymbol put: (row at: index ifAbsent: [ '' ])
+	].
+	^ data
+]
 
-	^ {
-		  (#id -> (row at: 1 ifAbsent: [ '' ])).
-		  (#legacyCode -> (row at: 2 ifAbsent: [ '' ])).
-		  (#Reference -> (row at: 3 ifAbsent: [ '' ])).
-		  (#output_codellama_CodeLlama_7b_Instruct_hf
-		   -> (row at: 4 ifAbsent: [ '' ])).
-		  (#output_codellama_CodeLlama_7b_Instruct_hf_Score
-		   -> (row at: 5 ifAbsent: [ '' ])).
-		  (#output_codellama_CodeLlama_13b_Instruct_hf
-		   -> (row at: 6 ifAbsent: [ '' ])).
-		  (#output_codellama_CodeLlama_13b_Instruct_hf_score
-		   -> (row at: 7 ifAbsent: [ '' ])).
-		  (#output_mistralai_Mistral_7B_Instruct_v0_3
-		   -> (row at: 8 ifAbsent: [ '' ])).
-		  (#output_mistralai_Mistral_7B_Instruct_v0_3_score
-		   -> (row at: 9 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_7B_Instruct -> (row at: 10 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_7B_Instruct_score
-		   -> (row at: 11 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_3B -> (row at: 12 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_3B_score
-		   -> (row at: 13 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_7B_Instruct
-		   -> (row at: 14 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_7B_Instruct_score
-		   -> (row at: 15 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_7B -> (row at: 16 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_7B_score
-		   -> (row at: 17 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_14B_Instruct
-		   -> (row at: 18 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_14B_Instruct_score
-		   -> (row at: 19 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_14B -> (row at: 20 ifAbsent: [ '' ])).
-		  (#output_Qwen_Qwen2_5_Coder_14B_score
-		   -> (row at: 21 ifAbsent: [ '' ])) } asDictionary
+{ #category : 'evaluation_csv' }
+LLMChRFEvaluation >> getModelColumnsFrom: headers [
+	"Extract model output and score column pairs from headers.
+	Returns a collection of dictionaries with outputCol and scoreCol keys"
+	| modelColumns |
+	modelColumns := OrderedCollection new.
+	
+	headers withIndexDo: [ :header :index |
+		(header beginsWith: 'output_') ifTrue: [
+			(header endsWith: 'score') ifFalse: [
+				| scoreColName scoreIndex |
+				scoreColName := header , '_score'.
+				scoreIndex := headers indexOf: scoreColName.
+				scoreIndex = 0 ifTrue: [
+					scoreColName := header , '_Score'.
+					scoreIndex := headers indexOf: scoreColName
+				].
+				modelColumns add: {
+					#outputCol -> index.
+					#scoreCol -> scoreIndex.
+					#outputName -> header.
+					#scoreName -> scoreColName
+				} asDictionary
+			]
+		]
+	].
+	^ modelColumns
 ]
 
 { #category : 'evaluation_csv' }
 LLMChRFEvaluation >> processCSVFile: inputFilePath outputFilePath: outputFilePath [
 	"Read CSV, calculate ChRF scores, and write results."
 
-	| rows outputRows |
+	"| rows outputRows |
 	rows := self readCSVFrom: inputFilePath.
 	outputRows := self processRows: rows.
 	self writeCSV: outputRows toFile: outputFilePath.
 
-	^ outputRows size
+	^ outputRows size"
+
+	"Main method to process entire CSV file"
+
+	"Main method to process entire CSV file"
+
+	"Main method to process entire CSV file"
+	| headers rows modelColumns inputStream |
+	
+	"Read headers"
+	headers := self readHeaders: inputFilePath.
+	
+	"Get model columns once"
+	modelColumns := self getModelColumnsFrom: headers.
+	
+	"Process all rows"
+	rows := OrderedCollection new.
+	rows add: headers. "Add header row first"
+	
+	inputStream := inputFilePath asFileReference readStream.
+	[
+		(NeoCSVReader on: inputStream)
+			separator: $;;
+			skipHeader;
+			do: [ :row | 
+				| processedRow |
+				processedRow := self 
+					processRow: row 
+					withHeaders: headers 
+					modelColumns: modelColumns.
+				rows add: processedRow
+			]
+	] ensure: [ inputStream close ].
+	
+	"Write output"
+	self writeCSV: rows toFile: outputFilePath
 ]
 
 { #category : 'evaluation_csv' }
-LLMChRFEvaluation >> processRow: row atIndex: index [
-	"Process a single row and calculate missing scores."
-
+LLMChRFEvaluation >> processRow: row withHeaders: headers modelColumns: modelColumns [
+	"Process a single row and calculate missing scores dynamically"
 	| data |
-	data := self extractDataFrom: row.
-	self calculateMissingScoresFor: data.
-
-	^ {
-		  (data at: #id).
-		  (data at: #legacyCode).
-		  (data at: #Reference).
-		  (data at: #output_codellama_CodeLlama_7b_Instruct_hf).
-		  (data at: #output_codellama_CodeLlama_7b_Instruct_hf_Score).
-		  (data at: #output_codellama_CodeLlama_13b_Instruct_hf).
-		  (data at: #output_codellama_CodeLlama_13b_Instruct_hf_score).
-		  (data at: #output_mistralai_Mistral_7B_Instruct_v0_3).
-		  (data at: #output_mistralai_Mistral_7B_Instruct_v0_3_score).
-		  (data at: #output_Qwen_Qwen2_7B_Instruct).
-		  (data at: #output_Qwen_Qwen2_7B_Instruct_score).
-		  (data at: #output_Qwen_Qwen2_5_Coder_3B).
-		  (data at: #output_Qwen_Qwen2_5_Coder_3B_score).
-		  (data at: #output_Qwen_Qwen2_5_Coder_7B_Instruct).
-		  (data at: #output_Qwen_Qwen2_5_Coder_7B_Instruct_score).
-		  (data at: #output_Qwen_Qwen2_5_Coder_7B).
-		  (data at: #output_Qwen_Qwen2_5_Coder_7B_score).
-		  (data at: #output_Qwen_Qwen2_5_Coder_14B_Instruct).
-		  (data at: #output_Qwen_Qwen2_5_Coder_14B_Instruct_score).
-		  (data at: #output_Qwen_Qwen2_5_Coder_14B).
-		  (data at: #output_Qwen_Qwen2_5_Coder_14B_score) }
-]
-
-{ #category : 'evaluation_csv' }
-LLMChRFEvaluation >> processRows: rows [
-	"Process each row and calculate missing scores."
-
-	^ rows collectWithIndex: [ :row :index |
-		  self processRow: row atIndex: index ]
+	data := self extractDataFrom: row withHeaders: headers.
+	self calculateMissingScoresFor: data withModelColumns: modelColumns.
+	
+	"Return row data in header order"
+	^ headers collect: [ :header | 
+		data at: header asSymbol ifAbsent: [ '' ]
+	]
 ]
 
 { #category : 'evaluation_csv' }
@@ -205,6 +188,19 @@ LLMChRFEvaluation >> readCSVFrom: filePath [
 			  separator: $;;
 			  skipHeader;
 			  upToEnd ] ensure: [ inputCsv close ]
+]
+
+{ #category : 'evaluation_csv' }
+LLMChRFEvaluation >> readHeaders: filePath [
+	"Read and return CSV headers"
+
+	| input headers |
+	input := filePath asFileReference readStream.
+	headers := [
+		           (NeoCSVReader on: input)
+			           separator: $;;
+			           readHeader ] ensure: [ input close ].
+	^ headers
 ]
 
 { #category : 'evaluation' }
@@ -221,6 +217,53 @@ LLMChRFEvaluation >> runEvaluationOn: filePath [
 	tempFile moveTo: originalFile.
 
 	^ 'Updated ' , filePath
+]
+
+{ #category : 'as yet unclassified' }
+LLMChRFEvaluation >> sendFileFromRemote: remoteFile fileDestination: localDestination [
+	"Metacello new
+    baseline: 'OSSubprocess';
+    repository: 'github://pharo-contributions/OSSubprocess:master/repository';
+    load.
+"
+
+	"resultFile := 'msudheen@access.grid5000.fr:lille/MyFortranTranslator/example.env'.
+resultDestination := '/Users/meghasudheendran/Documents/LLMExperimentData/22_dec_2025/'.
+"
+
+	OSSUnixSubprocess new
+		command: '/usr/bin/scp';
+		arguments: {
+				remoteFile.
+				localDestination };
+		redirectStderr;
+		runAndWaitOnExitDo: [ :process :outString |
+				process isSuccess
+					ifTrue: [ UIManager default inform: 'Upload Successful!' ]
+					ifFalse: [ process stderrStream contents inspect ] ]
+]
+
+{ #category : 'as yet unclassified' }
+LLMChRFEvaluation >> sendFileToRemote: localFile fileDestination: remoteTarget [
+"Metacello new
+    baseline: 'OSSubprocess';
+    repository: 'github://pharo-contributions/OSSubprocess:master/repository';
+    load.
+"
+
+"localFile := '/Users/meghasudheendran/Documents/LLMExperimentData/22_dec_2025/input.csv'.
+remoteTarget := 'msudheen@access.grid5000.fr:lille/MyFortranTranslator/'."
+
+	OSSUnixSubprocess new
+		command: '/usr/bin/scp';
+		arguments: {
+				localFile.
+				remoteTarget };
+		redirectStderr;
+		runAndWaitOnExitDo: [ :process :outString |
+				process isSuccess
+					ifTrue: [ UIManager default inform: 'Upload Successful!' ]
+					ifFalse: [ process stderrStream contents inspect ] ]
 ]
 
 { #category : 'evaluation_csv' }
@@ -248,27 +291,36 @@ LLMChRFEvaluation >> writeCSV: rows toFile: filePath [
 	[
 		(NeoCSVWriter on: output)
 			separator: $;;
-			nextPut:
-				#( 'id' 
-				'legacy_code' 
-				'Reference'	
-				'output_codellama_CodeLlama_7b_Instruct_hf'	 
-				'output_codellama_CodeLlama_7b_Instruct_hf_Score'
-				'output_codellama_CodeLlama_13b_Instruct_hf'	
-				'output_codellama_CodeLlama_13b_Instruct_hf_score'	
-				'output_mistralai_Mistral_7B_Instruct_v0_3' 	
-				'output_mistralai_Mistral_7B_Instruct_v0_3_score'	
-				'output_Qwen_Qwen2_7B_Instruct'
-				'output_Qwen_Qwen2_7B_Instruct_score'
-				'output_Qwen_Qwen2_5_Coder_3B'	
-				'output_Qwen_Qwen2_5_Coder_3B_score'	
-				'output_Qwen_Qwen2_5_Coder_7B_Instruct'	
-				'output_Qwen_Qwen2_5_Coder_7B_Instruct_score'	
-				'output_Qwen_Qwen2_5_Coder_7B'	
-				'output_Qwen_Qwen2_5_Coder_7B_score'	
-				'output_Qwen_Qwen2_5_Coder_14B_Instruct'	
-				'output_Qwen_Qwen2_5_Coder_14B_Instruct_score'	
-				'output_Qwen_Qwen2_5_Coder_14B'	
-				'output_Qwen_Qwen2_5_Coder_14B_score');
 			nextPutAll: rows ] ensure: [ output close ]
+
+	"Write rows to CSV file with header"
+	"
+	| output |
+	output := filePath asFileReference writeStream.
+	[
+		(NeoCSVWriter on: output)
+			separator: $;;
+			nextPut:
+				#( 'id' 'legacy_code' 'Reference' 'output_codellama_CodeLlama_7b_Instruct_hf'
+				   'output_codellama_CodeLlama_7b_Instruct_hf_Score'
+				   'output_codellama_CodeLlama_13b_Instruct_hf'
+				   'output_codellama_CodeLlama_13b_Instruct_hf_score'
+				   'output_mistralai_Mistral_7B_Instruct_v0_3'
+				   'output_mistralai_Mistral_7B_Instruct_v0_3_score'
+				   'output_Qwen_Qwen2_7B_Instruct' 'output_Qwen_Qwen2_7B_Instruct_score'
+				   'output_Qwen_Qwen2_5_Coder_3B' 'output_Qwen_Qwen2_5_Coder_3B_score'
+				   'output_Qwen_Qwen2_5_Coder_7B_Instruct'
+				   'output_Qwen_Qwen2_5_Coder_7B_Instruct_score'
+				   'output_Qwen_Qwen2_5_Coder_7B' 'output_Qwen_Qwen2_5_Coder_7B_score'
+				   'output_Qwen_Qwen2_5_Coder_14B_Instruct'
+				   'output_Qwen_Qwen2_5_Coder_14B_Instruct_score'
+				   'output_Qwen_Qwen2_5_Coder_14B' 'output_Qwen_Qwen2_5_Coder_14B_score'
+				   'output_Qwen_Qwen3_Coder_30B_A3B_Instruct'
+				   'output_Qwen_Qwen3_Coder_30B_A3B_Instruct_score'
+				   'output_Qwen_Qwen2_5_Coder_32B_Instruct'
+				   'output_Qwen_Qwen2_5_Coder_32B_Instruct_score'
+					'output_Qwen_Qwen2_5_Coder_32B'
+					'output_Qwen_Qwen2_5_Coder_32B_score'
+				 );
+			nextPutAll: rows ] ensure: [ output close ]"
 ]

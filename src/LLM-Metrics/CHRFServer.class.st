@@ -26,12 +26,15 @@ CHRFServer >> getScore: candidates listOfreferences: references [
 { #category : 'services' }
 CHRFServer >> handleChRFRequest: request [
 
+	
 	| json candidates references score |
 	
 	request method = #POST ifFalse: [
 		^ ZnResponse badRequest: 'Only POST allowed' ].
 
 	json := STONJSON fromString: request entity contents.
+	candidates := (json at: 'candidates') asOrderedCollection.
+	references := (json at: 'references') asOrderedCollection.
 
 	candidates := json
 		              at: 'candidates'
@@ -42,6 +45,10 @@ CHRFServer >> handleChRFRequest: request [
 		              at: 'references'
 		              ifAbsent: [
 		              ^ ZnResponse badRequest: 'missing references' ].
+	candidates isString ifTrue: [
+		candidates := OrderedCollection with: candidates ].
+	references isString ifTrue: [
+		references := OrderedCollection with: references ].
 
 	score := self getScore: candidates listOfreferences: references.
 
@@ -53,11 +60,12 @@ CHRFServer >> handleChRFRequest: request [
 
 { #category : 'services' }
 CHRFServer >> startCHRFServiceOn: port [
-
 	server := ZnServer startOn: port.
 	server delegate
 		map: 'chrf'
 		to: [ :request | self handleChRFRequest: request ]
+
+	
 ]
 
 { #category : 'services' }
